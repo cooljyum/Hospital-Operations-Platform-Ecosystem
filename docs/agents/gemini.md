@@ -25,6 +25,16 @@ Claude가 만든 테스트·기준·시나리오는 전부 **Claude의 이해에
 
 > 초록불은 결승선이 아니라 "더 세게 찔러라"는 신호다. **독립적 적대자(gemini의 적대 감사 + Claude가 저작하지 않은 입력)가 못 깨뜨릴 때까지** 반복한다.
 
+### 0-2. 무료 티어 일일 쿼터 제약 — Phase 단위 검증 배칭
+
+- gemini CLI 무료 티어는 **일일 요청 한도**가 있다(실측: `gemini-3.5-flash` 20회/일, `gemini-3.1-pro`는 사실상 0회). 한도 소진 시 에러는 `TerminalQuotaError: You have exhausted your daily quota`로, §5의 429(분당 레이트리밋)와 달리 **짧은 재시도로는 풀리지 않는다**(일일 리셋 전까지 막힘).
+- 이 제약 때문에 step마다 gemini를 호출하는 §4의 기본 루프는, step 수가 많은 계획(예: `docs/planning/PLAN.md`처럼 수십 step)에서는 하루 안에 끝나지 않는다.
+- **완화책(2026-07-17, 사용자 승인 — 무료 쿼터로 운영하는 동안 기본값)**: step마다 gemini를 부르지 않고, **Phase(여러 step 묶음)가 끝나는 시점에 그 Phase의 누적 diff를 gemini에 한 번만** 검증받는다.
+  - **커밋은 여전히 step 단위로 쪼갠다** — "한 step = 한 커밋" 원칙(§4 진행 정책)은 그대로 유지한다. 다만 그 시점엔 gemini VERDICT가 없으므로, 커밋 메시지에 "gemini 검증은 Phase 종료 시점 일괄 예정"이라고 반드시 남긴다.
+  - Phase의 마지막 step까지 구현·로컬 검증(빌드/테스트)·커밋이 끝나면, 그 Phase에 속한 전체 커밋의 누적 diff를 acceptance criteria로 묶어 gemini를 한 번 호출한다.
+  - `VERDICT: PASS` → Phase 전체를 완료로 간주한다. `VERDICT: FAIL` → 어느 step의 어느 산출물이 문제인지 특정해 해당 step만 수정 후 재검증한다(Phase 전체를 되돌리지 않는다).
+  - 이 배칭은 **쿼터가 실제로 부족할 때 쓰는 완화책**이다 — 쿼터 여유가 있는 세션(예: 과금되는 키)에서는 §4의 step당 검증이 기본값이다.
+
 ---
 
 ## 1. 사전 조건
@@ -107,6 +117,8 @@ git status --porcelain | diff /tmp/gemini_pre.txt -  # 델타 = gemini 실행 �
 5. `VERDICT: FAIL` → 사유를 보고 수정 후 3번 재실행. (Claude가 임의로 "됐다" 하지 않는다.)
 
 ### 진행 정책 (커밋·자동 진행)
+
+> 무료 티어 쿼터 소진 상황에서는 이 루프 대신 **§0-2(Phase 단위 검증 배칭)**를 따른다 — step별 커밋 원칙은 동일하지만 gemini 호출을 Phase 끝으로 미룬다.
 
 - **step별 커밋**: PASS 받은 step은 그 즉시 대상 파일만 커밋한다. 한 step = 한 커밋(원칙).
 - **묻지 않고 계속**: PASS면 사용자 확인 없이 다음 step을 바로 시작한다. 진행 자체를 멈추고 묻는 건 아래 *진짜 멈춰야 할 때*로 한정한다.
