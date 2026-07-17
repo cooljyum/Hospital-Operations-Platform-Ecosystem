@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+이 파일은 컨트롤러가 직접 렌더하지 않고, 다른 템플릿에서 th:replace로 아래 th:fragment 조각만
+가져다 쓰는 "레이아웃 프래그먼트 저장소"다.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="head(title)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${title} + ' | Hospital Ops Lab'">Hospital Ops Lab</title>
+
+    <link rel="stylesheet" th:href="@{/adminlte/plugins/fontawesome-free/css/all.min.css}" />
+    <link rel="stylesheet" th:href="@{/adminlte/plugins/bootstrap/css/bootstrap.min.css}" />
+    <link rel="stylesheet" th:href="@{/adminlte/dist/css/adminlte.min.css}" />
+</th:block>
+
+<nav th:fragment="topnavbar" class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+        </li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+            <span class="nav-link">Hospital Ops Lab</span>
+        </li>
+    </ul>
+</nav>
+
+<aside th:fragment="sidebar" class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="#" class="brand-link">
+        <span class="brand-text font-weight-light">Hospital Ops Lab</span>
+    </a>
+    <div class="sidebar">
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link active">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>대시보드</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</aside>
+
+<footer th:fragment="footer" class="main-footer">
+    <div class="float-right d-none d-sm-inline">Hospital Ops Lab</div>
+    <strong>&copy; 2026 Hospital Ops Lab.</strong> All rights reserved.
+</footer>
+
+<th:block th:fragment="scripts">
+    <script th:src="@{/adminlte/plugins/jquery/jquery.min.js}"></script>
+    <script th:src="@{/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/adminlte/dist/js/adminlte.min.js}"></script>
+</th:block>
+
+</body>
+</html>
