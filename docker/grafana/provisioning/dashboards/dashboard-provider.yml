@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      # 실제 대시보드 JSON은 docker/grafana/dashboards/ 에 두고,
+      # docker-compose.yml이 그 경로를 컨테이너의 /var/lib/grafana/dashboards로 마운트한다.
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Spring Boot Actuator + Micrometer 메트릭 엔드포인트.
+  # Phase 7.1에서 spring-boot-starter-actuator + micrometer-registry-prometheus 추가 전까지는
+  # /actuator/prometheus가 존재하지 않아 이 타겟은 DOWN으로 보일 수 있다(예상된 동작).
+  - job_name: 'hospital-ops-app'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['app:8080']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
