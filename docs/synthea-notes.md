@@ -155,7 +155,7 @@ You've just generated 12 patients!
 
 **산출물 위치**: `data/synthetic/` (저장소 루트 기준, git 커밋 대상 아님 — `.gitignore`의 `/data/` 규칙)
 
-**생성된 파일 (37개 파일, `Get-ChildItem -Recurse` 실측)**:
+**생성된 파일 (33개 파일, `Get-ChildItem -Recurse` 실측 — 14+18+1)**:
 
 | 디렉터리 | 파일 수 | 내용 |
 |---|---|---|
