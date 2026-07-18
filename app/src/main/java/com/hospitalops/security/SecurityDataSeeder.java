@@ -47,6 +47,14 @@ public class SecurityDataSeeder implements ApplicationRunner {
 	public void run(ApplicationArguments args) {
 		// Step 3.1: 폼 로그인 흐름을 실제로 검증할 최소 1개 계정.
 		seedUserIfAbsent("admin", "ROLE_SYSTEM_ADMIN");
+
+		// Step 3.2: RBAC 5역할 각각을 실제로 로그인해 접근 차등을 검증할 테스트 계정.
+		// 계정명은 deliverable.md §3.3의 5역할(의사/간호사/원무/전산관리자/감사자)을
+		// 영문 역할명으로 그대로 옮긴 것 — admin은 이미 ROLE_SYSTEM_ADMIN을 맡고 있다.
+		seedUserIfAbsent("physician", "ROLE_PHYSICIAN");
+		seedUserIfAbsent("nurse", "ROLE_NURSE");
+		seedUserIfAbsent("registrar", "ROLE_REGISTRAR");
+		seedUserIfAbsent("auditor", "ROLE_AUDITOR");
 	}
 
 	/**

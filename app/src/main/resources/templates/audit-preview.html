@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='감사 로그 미리보기')}">
+    <title>감사 로그 미리보기</title>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav th:replace="~{layout/default :: topnavbar}"></nav>
+
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <h1>감사 로그 미리보기</h1>
+            </div>
+        </div>
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Phase 3 Step 3.2 RBAC placeholder</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>이 화면은 ROLE_AUDITOR 역할만 접근 가능한 placeholder다.</p>
+                        <p>Phase 5.2에서 실제 감사 로그 조회 화면(필터: 행위자/기간/대상)으로 대체될 예정이다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer th:replace="~{layout/default :: footer}"></footer>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
