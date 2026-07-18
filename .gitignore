@@ -22,3 +22,9 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Synthea 합성 데이터 생성기 (Phase 0 Step 0.5)
+# - scripts/vendor/*.jar: 다운로드 캐시(용량 大, gen-synthetic-data.ps1이 재현 다운로드함). *.jar 규칙에 이미 포함되지만 명시.
+# - data/: Synthea 실행 산출물(FHIR bundle/CSV, 대량). 실데이터 아님(전부 합성)이나 커밋 대상 아님.
+/scripts/vendor/
+/data/
