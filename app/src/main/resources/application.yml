@@ -68,3 +68,11 @@ app:
   crypto:
     pseudonymizer:
       hmac-key: ${PSEUDONYMIZER_HMAC_KEY:dev-only-pseudonymizer-hmac-key-change-me}
+    # Phase 4 Step 4.2: AES-256-GCM 엔벨로프 암호화 KEK(Key Encryption Key).
+    # 운영에서는 Docker secret으로 공급되는 값을 ENVELOPE_KEK 환경변수로 주입한다.
+    # 의도적으로 기본값을 두지 않는다(빈 문자열 fallback) — ENVELOPE_KEK가 없으면
+    # EnvelopeCrypto 빈 생성자가 실패해 애플리케이션 기동 자체가 막힌다. 로컬 개발에서는
+    # 반드시 ENVELOPE_KEK(Base64 인코딩된 32바이트 값)를 직접 지정해서 기동해야 한다.
+    # 회전 절차는 docs/runbooks/key-rotation.md 참고.
+    envelope:
+      kek: ${ENVELOPE_KEK:}
