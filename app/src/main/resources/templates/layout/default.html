@@ -3,7 +3,7 @@
 이 파일은 컨트롤러가 직접 렌더하지 않고, 다른 템플릿에서 th:replace로 아래 th:fragment 조각만
 가져다 쓰는 "레이아웃 프래그먼트 저장소"다.
 -->
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <th:block th:fragment="head(title)">
@@ -40,6 +40,12 @@
                     <a href="/dashboard" class="nav-link active">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>대시보드</p>
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAuthority('ROLE_AUDITOR')">
+                    <a href="/audit/preview" class="nav-link">
+                        <i class="nav-icon fas fa-clipboard-list"></i>
+                        <p>감사 로그</p>
                     </a>
                 </li>
             </ul>

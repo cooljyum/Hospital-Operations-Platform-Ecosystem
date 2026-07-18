@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='감사 로그 조회')}">
+    <title>감사 로그 조회</title>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav th:replace="~{layout/default :: topnavbar}"></nav>
+
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <h1>감사 로그 조회</h1>
+            </div>
+        </div>
+        <section class="content">
+            <div class="container-fluid">
+
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">필터</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" th:action="@{/audit/preview}" class="form-inline">
+                            <div class="form-group mr-3 mb-2">
+                                <label for="actorUsername" class="mr-2">행위자</label>
+                                <input type="text" class="form-control" id="actorUsername"
+                                       name="actorUsername" th:value="${actorUsername}"
+                                       placeholder="예: physician" />
+                            </div>
+                            <div class="form-group mr-3 mb-2">
+                                <label for="targetPk" class="mr-2">대상 PK</label>
+                                <input type="text" class="form-control" id="targetPk"
+                                       name="targetPk" th:value="${targetPk}"
+                                       placeholder="예: 12345" />
+                            </div>
+                            <div class="form-group mr-3 mb-2">
+                                <label for="from" class="mr-2">시작일</label>
+                                <input type="date" class="form-control" id="from"
+                                       name="from" th:value="${from}" />
+                            </div>
+                            <div class="form-group mr-3 mb-2">
+                                <label for="to" class="mr-2">종료일</label>
+                                <input type="date" class="form-control" id="to"
+                                       name="to" th:value="${to}" />
+                            </div>
+                            <button type="submit" class="btn btn-primary mb-2">
+                                <i class="fas fa-search"></i> 조회
+                            </button>
+                            <a th:href="@{/audit/preview}" class="btn btn-default mb-2 ml-2">초기화</a>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">조회 결과 (<span th:text="${#lists.size(logs)}">0</span>건)</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                            <tr>
+                                <th>시각</th>
+                                <th>행위자</th>
+                                <th>행위</th>
+                                <th>대상 PK</th>
+                                <th>목적</th>
+                                <th>마스킹</th>
+                                <th>결과 코드</th>
+                                <th>성공 여부</th>
+                                <th>IP</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(logs)}">
+                                <td colspan="9" class="text-center text-muted">조회된 감사 로그가 없습니다.</td>
+                            </tr>
+                            <tr th:each="log : ${logs}">
+                                <td th:text="${log.occurredAt}">2026-01-01T00:00:00</td>
+                                <td th:text="${log.actorUsername}">actor</td>
+                                <td th:text="${log.action}">ACTION</td>
+                                <td th:text="${log.targetPk} ?: '-'">-</td>
+                                <td th:text="${log.purpose} ?: '-'">-</td>
+                                <td th:text="${log.masked} ? '예' : '아니오'">아니오</td>
+                                <td th:text="${log.resultCode}">RESULT_CODE</td>
+                                <td>
+                                    <span class="dot" th:classappend="${log.success} ? 'dot-success' : 'dot-danger'"></span>
+                                    <span th:class="${log.success} ? 'text-success' : 'text-danger'"
+                                          th:text="${log.success} ? '성공' : '실패'">성공</span>
+                                </td>
+                                <td th:text="${log.ipAddress} ?: '-'">-</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <footer th:replace="~{layout/default :: footer}"></footer>
+</div>
+
+<style>
+    /* 레이아웃 기준(CLAUDE.md): 상태는 색이 채워진 배지가 아니라 작은 점(dot) + 텍스트로 표현한다. */
+    .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+    .dot-success { background-color: #28a745; }
+    .dot-danger { background-color: #dc3545; }
+</style>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
