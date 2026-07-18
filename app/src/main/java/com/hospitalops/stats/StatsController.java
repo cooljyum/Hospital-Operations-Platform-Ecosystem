@@ -12,11 +12,10 @@ import java.util.List;
  * 환자 수. 셀 값이 5 미만이면 {@link SuppressedCell#SUPPRESSED_LABEL}로만 표시되고
  * 실제 숫자는 응답 어디에도 없다({@link PatientStatsService}가 억제를 강제).</p>
  *
- * <p>이 경로는 ACCESS_POLICY_RULES에 아직 등록돼 있지 않다 - Phase 2의
- * {@code FhirController}와 같은 위치로, SecurityConfig의
- * {@code auth.anyRequest().authenticated()} 기본 규칙에 따라 인증된 사용자라면 역할
- * 무관하게 접근 가능하다. 역할별 세분화(예: 감사자/관리자 전용)가 필요하면 이후
- * ACCESS_POLICY_RULES에 전용 row를 추가해 좁히면 된다(이번 step 범위 밖).</p>
+ * <p>{@code /stats/**}는 ACCESS_POLICY_RULES(V12 마이그레이션)에 ROLE_AUDITOR /
+ * ROLE_SYSTEM_ADMIN 전용으로 등록돼 있다 - 셀 값 자체는 k=5 미만이면 억제되지만
+ * 교차표(성별×연령대) 구조 자체가 민감하므로, 의사/간호사/원무 역할은
+ * SecurityConfig에서 403으로 차단된다.</p>
  */
 @RestController
 public class StatsController {

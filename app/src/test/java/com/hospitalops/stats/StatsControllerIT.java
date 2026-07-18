@@ -2,6 +2,8 @@ package com.hospitalops.stats;
 
 import com.hospitalops.security.SecurityDataSeeder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 결과 셀이 항상 정확히 이 테스트가 넣은 건수와 일치하게 만든다), API 응답에서 억제
  * 여부를 직접 확인한다. {@code @Transactional}로 테스트 종료 시 삽입한 행을 자동
  * 롤백한다(운영 데이터에 잔여물을 남기지 않음).
+ *
+ * <p>이월 이슈 수정(V12 마이그레이션): {@code /stats/**}는 이제 ACCESS_POLICY_RULES에
+ * ROLE_AUDITOR/ROLE_SYSTEM_ADMIN 전용으로 등록돼 있다. 억제 로직 테스트는 그래서
+ * physician이 아니라 auditor로 로그인한다({@link #cellsBelowFiveAreSuppressedAndCellsAtOrAboveFiveShowTheRealCount()}).
+ * {@link #roleBasedAccessControlOnStatsEndpoint(String, boolean)}가 5개 역할 전원에 대해
+ * 감사자/관리자는 200, 의사/간호사/원무는 403임을 직접 검증한다.</p>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -52,7 +60,7 @@ class StatsControllerIT {
 		insertTestPatient("STATS-TEST-M-5", "STM-0005", "TESTM", "1985-01-01");
 		insertTestPatient("STATS-TEST-M-6", "STM-0006", "TESTM", "1985-01-01");
 
-		MockHttpSession session = loginAs("physician");
+		MockHttpSession session = loginAs("auditor");
 
 		MvcResult result = mockMvc.perform(get("/stats/patient-count-by-gender-age-band").session(session))
 				.andExpect(status().isOk())
@@ -68,6 +76,27 @@ class StatsControllerIT {
 		// 억제되지 않은 셀(TESTM, 원값=6)은 실제 값이 그대로 노출되어야 한다.
 		assertThat(body).contains("\"gender\":\"TESTM\"");
 		assertThat(body).contains("\"count\":6");
+	}
+
+	/**
+	 * V12 마이그레이션 이월 이슈 수정 검증: {@code /stats/**}는 감사자/전산관리자만
+	 * 200을 받고, 나머지 3역할(의사/간호사/원무)은 403으로 차단되어야 한다.
+	 */
+	@ParameterizedTest(name = "{0} -> allowed={1}")
+	@CsvSource({
+			"admin, true",
+			"auditor, true",
+			"physician, false",
+			"nurse, false",
+			"registrar, false",
+	})
+	void roleBasedAccessControlOnStatsEndpoint(String username, boolean allowed) throws Exception {
+		MockHttpSession session = loginAs(username);
+
+		var expectedStatus = allowed ? status().isOk() : status().isForbidden();
+
+		mockMvc.perform(get("/stats/patient-count-by-gender-age-band").session(session))
+				.andExpect(expectedStatus);
 	}
 
 	private void insertTestPatient(String sourceUuid, String syntheticNo, String gender, String birthDate) {
