@@ -25,7 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		"spring.datasource.username=sa",
 		"spring.datasource.password=",
 		"spring.flyway.enabled=false",
-		"spring.jpa.hibernate.ddl-auto=none"
+		"spring.jpa.hibernate.ddl-auto=none",
+		// Phase 3 Step 3.1: APP_USER/APP_ROLE 테이블이 없는 이 H2 컨텍스트에서
+		// SecurityDataSeeder(ApplicationRunner)가 시딩을 시도해 컨텍스트 기동이 깨지는 것을 방지.
+		"app.security.seed-enabled=false"
 })
 @AutoConfigureMockMvc
 class DashboardControllerTests {

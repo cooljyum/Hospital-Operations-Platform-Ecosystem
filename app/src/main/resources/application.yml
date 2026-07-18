@@ -54,3 +54,11 @@ synthea:
 sync:
   job:
     enabled: ${SYNC_JOB_ENABLED:false}
+
+# Phase 3 Step 3.1: 로컬 검증/통합테스트용 계정 부팅 시 시딩(SecurityDataSeeder) 스위치.
+# 기본 true. H2 인메모리 + Flyway 비활성 조합으로 도는 기존 스모크 테스트
+# (HospitalOpsLabApplicationTests, DashboardControllerTests)는 APP_USER/APP_ROLE
+# 테이블이 없으므로 각 테스트 프로퍼티에서 false로 명시 오버라이드한다.
+app:
+  security:
+    seed-enabled: ${APP_SECURITY_SEED_ENABLED:true}
