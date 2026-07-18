@@ -28,8 +28,12 @@ public class SecurityDataSeeder implements ApplicationRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(SecurityDataSeeder.class);
 
-	/** 로컬 검증 전용 테스트 계정 공통 비밀번호. 운영 배포 대상이 아니다. */
-	static final String LOCAL_TEST_PASSWORD = "ChangeMe123!";
+	/**
+	 * 로컬 검증 전용 테스트 계정 공통 비밀번호. 운영 배포 대상이 아니다.
+	 * Phase 3 Step 3.3부터 breakglass 패키지의 통합테스트도 이 상수로 실제 로그인을
+	 * 수행하므로 public으로 둔다(패키지 간 참조).
+	 */
+	public static final String LOCAL_TEST_PASSWORD = "ChangeMe123!";
 
 	private final AppUserRepository appUserRepository;
 	private final AppRoleRepository appRoleRepository;

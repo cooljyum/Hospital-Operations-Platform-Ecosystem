@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='응급 환자 기록 (break-glass)')}">
+    <title>응급 환자 기록 (break-glass)</title>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav th:replace="~{layout/default :: topnavbar}"></nav>
+
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <h1>응급 환자 기록 (break-glass)</h1>
+            </div>
+        </div>
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Phase 3 Step 3.3 break-glass placeholder</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>이 화면은 평소엔 어떤 역할도 접근할 수 없고, break-glass(POST /breakglass/grant, 사유 필수)로
+                            현재 세션에 한해 한시적으로만 열린다.</p>
+                        <p>실제 환자데이터 화면이 아직 없어(Phase 4/5 이후 채워짐) 지금은 더미다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer th:replace="~{layout/default :: footer}"></footer>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
