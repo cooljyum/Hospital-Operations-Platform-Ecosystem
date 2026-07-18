@@ -39,7 +39,7 @@ class DashboardControllerTests {
 		// 컨텐츠 협상 기반 AuthenticationEntryPoint가 폼 로그인 리다이렉트(302)를 선택한다.
 		// (Accept 헤더가 없으면 Basic-auth 챌린지(401)로 빠지므로 명시적으로 지정한다.)
 		mockMvc.perform(get("/dashboard").accept(MediaType.TEXT_HTML))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isFound());
 	}
 
 	@Test
