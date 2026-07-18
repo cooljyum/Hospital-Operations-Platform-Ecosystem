@@ -62,3 +62,9 @@ sync:
 app:
   security:
     seed-enabled: ${APP_SECURITY_SEED_ENABLED:true}
+  # Phase 4 Step 4.1: HMAC-SHA-256 가명화 키(Pseudonymizer). 하드코딩 금지 —
+  # 운영에서는 반드시 PSEUDONYMIZER_HMAC_KEY 환경변수로 실제 키를 주입한다.
+  # 아래 기본값은 로컬 개발/테스트에서만 쓰이는 placeholder다.
+  crypto:
+    pseudonymizer:
+      hmac-key: ${PSEUDONYMIZER_HMAC_KEY:dev-only-pseudonymizer-hmac-key-change-me}
