@@ -56,7 +56,8 @@ public class PatientSyncTasklet implements Tasklet {
 		for (Map<String, Object> row : rows) {
 			PatientRow patientRow = toRow(row);
 			Patient resource = PatientMapper.toFhir(patientRow);
-			cacheUpsertService.upsert(RESOURCE_TYPE, patientRow.patientId(), resource);
+			// Patient 리소스 자신은 소속 환자가 없으므로 patient_fhir_id는 NULL이다.
+			cacheUpsertService.upsert(RESOURCE_TYPE, patientRow.patientId(), resource, null);
 		}
 
 		watermarkService.advanceWatermarkToTableMax(RESOURCE_TYPE, LEGACY_TABLE);

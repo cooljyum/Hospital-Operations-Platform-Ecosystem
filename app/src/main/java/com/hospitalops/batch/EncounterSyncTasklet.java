@@ -53,7 +53,10 @@ public class EncounterSyncTasklet implements Tasklet {
 		for (Map<String, Object> row : rows) {
 			EncounterRow encounterRow = toRow(row);
 			Encounter resource = EncounterMapper.toFhir(encounterRow);
-			cacheUpsertService.upsert(RESOURCE_TYPE, encounterRow.visitId(), resource);
+			// "patient-" + patientId는 EncounterMapper가 Reference("Patient/patient-" + ...)에
+			// 이미 쓰고 있는 것과 동일한 어휘다(Step 2.4 search의 patient_fhir_id).
+			cacheUpsertService.upsert(RESOURCE_TYPE, encounterRow.visitId(), resource,
+					"patient-" + encounterRow.patientId());
 		}
 
 		watermarkService.advanceWatermarkToTableMax(RESOURCE_TYPE, LEGACY_TABLE);

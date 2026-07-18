@@ -43,6 +43,14 @@ public class FhirResourceCache {
 	@Column(name = "fhir_id", nullable = false, length = 64)
 	private String fhirId;
 
+	/**
+	 * Phase 2 보완(Step 2.4 search): 이 리소스가 속한 환자의 fhir_id("patient-1" 등).
+	 * Patient 리소스 자신은 NULL(자기 자신이 환자이므로 소속 환자가 없음). Encounter/
+	 * Observation/MedicationRequest는 SyncJob이 upsert 시점에 채운다(V7 마이그레이션).
+	 */
+	@Column(name = "patient_fhir_id", length = 64)
+	private String patientFhirId;
+
 	@Lob
 	@Column(name = "resource_json", nullable = false, columnDefinition = "LONGTEXT")
 	private String resourceJson;
@@ -80,6 +88,14 @@ public class FhirResourceCache {
 
 	public void setFhirId(String fhirId) {
 		this.fhirId = fhirId;
+	}
+
+	public String getPatientFhirId() {
+		return patientFhirId;
+	}
+
+	public void setPatientFhirId(String patientFhirId) {
+		this.patientFhirId = patientFhirId;
 	}
 
 	public String getResourceJson() {

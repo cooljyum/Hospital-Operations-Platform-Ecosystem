@@ -27,9 +27,12 @@ public class FhirResourceCacheUpsertService {
 	 * @param resourceType   FHIR 리소스 타입명("Patient","Encounter","Observation","MedicationRequest")
 	 * @param sourceTablePk  변환 원본 레거시 테이블의 불변 내부 PK
 	 * @param resource       변환된 HAPI FHIR 리소스(이미 {@code setId(...)}로 fhir_id가 설정돼 있어야 함)
+	 * @param patientFhirId  이 리소스가 속한 환자의 fhir_id("patient-1" 등). Patient 리소스
+	 *                       자신은 소속 환자가 없으므로 {@code null}을 넘긴다(Step 2.4 search가
+	 *                       사용하는 patient_fhir_id 컬럼, V7 마이그레이션).
 	 */
 	@Transactional
-	public void upsert(String resourceType, long sourceTablePk, IBaseResource resource) {
+	public void upsert(String resourceType, long sourceTablePk, IBaseResource resource, String patientFhirId) {
 		String fhirId = resource.getIdElement().getIdPart();
 		String json = fhirContext.newJsonParser().encodeResourceToString(resource);
 
@@ -39,6 +42,7 @@ public class FhirResourceCacheUpsertService {
 		entity.setResourceType(resourceType);
 		entity.setSourceTablePk(sourceTablePk);
 		entity.setFhirId(fhirId);
+		entity.setPatientFhirId(patientFhirId);
 		entity.setResourceJson(json);
 		entity.setSyncedAt(LocalDateTime.now());
 		repository.save(entity);

@@ -2,6 +2,7 @@ package com.hospitalops.fhir;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -15,4 +16,10 @@ public interface FhirResourceCacheRepository extends JpaRepository<FhirResourceC
 	Optional<FhirResourceCache> findByResourceTypeAndSourceTablePk(String resourceType, Long sourceTablePk);
 
 	Optional<FhirResourceCache> findByResourceTypeAndFhirId(String resourceType, String fhirId);
+
+	/**
+	 * Phase 2 보완(Step 2.4 search): {@code GET /fhir/{Type}?patient={patientFhirId}}가
+	 * 사용하는 조회. 매칭이 없으면 빈 리스트를 반환한다(컨트롤러가 이를 빈 Bundle로 감싼다).
+	 */
+	List<FhirResourceCache> findByResourceTypeAndPatientFhirId(String resourceType, String patientFhirId);
 }

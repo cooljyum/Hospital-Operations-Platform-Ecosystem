@@ -92,6 +92,91 @@ class FhirControllerIT {
 				.andExpect(status().isNotFound());
 	}
 
+	/**
+	 * Phase 2 보완: 독립 검증(Claude, 04dec26~fe662ab)에서 지적된 "search" 완결성 갭 해소.
+	 * 하드코딩된 기대값이 아니라 FHIR_RESOURCE_CACHE.patient_fhir_id에 대한 실측 COUNT(*)와
+	 * search 결과 Bundle의 total/entry 개수를 직접 대조한다(V7 마이그레이션 + SyncJob 재실행
+	 * 으로 patient_fhir_id가 채워져 있어야 이 테스트가 통과한다).
+	 */
+	@Test
+	@WithMockUser
+	void searchEncounterByPatientMatchesActualCacheCountForRealPatient() throws Exception {
+		String patientFhirId = firstFhirId("Patient");
+		long expectedCount = countCacheRowsForPatient("Encounter", patientFhirId);
+		assertThat(expectedCount).isGreaterThan(0L);
+
+		MvcResult result = mockMvc.perform(get("/fhir/Encounter")
+						.param("patient", patientFhirId)
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Bundle\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"type\":\"searchset\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"total\":" + expectedCount)))
+				.andReturn();
+
+		String body = result.getResponse().getContentAsString();
+		long entryOccurrences = countOccurrences(body, "\"resourceType\":\"Encounter\"");
+		assertThat(entryOccurrences).isEqualTo(expectedCount);
+	}
+
+	@Test
+	@WithMockUser
+	void searchObservationByPatientMatchesActualCacheCountForRealPatient() throws Exception {
+		String patientFhirId = firstFhirId("Patient");
+		long expectedCount = countCacheRowsForPatient("Observation", patientFhirId);
+		assertThat(expectedCount).isGreaterThan(0L);
+
+		mockMvc.perform(get("/fhir/Observation")
+						.param("patient", patientFhirId)
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Bundle\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"total\":" + expectedCount)));
+	}
+
+	@Test
+	@WithMockUser
+	void searchMedicationRequestByPatientMatchesActualCacheCountForRealPatient() throws Exception {
+		String patientFhirId = firstFhirId("Patient");
+		long expectedCount = countCacheRowsForPatient("MedicationRequest", patientFhirId);
+		assertThat(expectedCount).isGreaterThan(0L);
+
+		mockMvc.perform(get("/fhir/MedicationRequest")
+						.param("patient", patientFhirId)
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Bundle\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"total\":" + expectedCount)));
+	}
+
+	@Test
+	@WithMockUser
+	void searchWithUnknownPatientReturnsEmptyBundleNotNotFound() throws Exception {
+		mockMvc.perform(get("/fhir/Encounter")
+						.param("patient", "patient-does-not-exist-99999")
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Bundle\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"total\":0")));
+	}
+
+	private long countCacheRowsForPatient(String resourceType, String patientFhirId) {
+		Long count = jdbcTemplate.queryForObject(
+				"SELECT COUNT(*) FROM FHIR_RESOURCE_CACHE WHERE resource_type = ? AND patient_fhir_id = ?",
+				Long.class, resourceType, patientFhirId);
+		return count == null ? 0 : count;
+	}
+
+	private static long countOccurrences(String haystack, String needle) {
+		long count = 0;
+		int index = 0;
+		while ((index = haystack.indexOf(needle, index)) != -1) {
+			count++;
+			index += needle.length();
+		}
+		return count;
+	}
+
 	private String firstFhirId(String resourceType) {
 		java.util.List<String> ids = jdbcTemplate.queryForList(
 				"SELECT fhir_id FROM FHIR_RESOURCE_CACHE WHERE resource_type = ? ORDER BY id LIMIT 1",

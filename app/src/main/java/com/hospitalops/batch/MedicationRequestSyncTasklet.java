@@ -63,7 +63,10 @@ public class MedicationRequestSyncTasklet implements Tasklet {
 			Coding resolvedCode = codeSetLookupService.toCoding(
 					CODE_SYSTEM, medicationRequestRow.medicationCode(), medicationRequestRow.medicationDescription());
 			MedicationRequest resource = MedicationRequestMapper.toFhir(medicationRequestRow, resolvedCode);
-			cacheUpsertService.upsert(RESOURCE_TYPE, medicationRequestRow.prescriptionId(), resource);
+			// "patient-" + patientId는 MedicationRequestMapper가 Reference("Patient/patient-" + ...)에
+			// 이미 쓰고 있는 것과 동일한 어휘다(Step 2.4 search의 patient_fhir_id).
+			cacheUpsertService.upsert(RESOURCE_TYPE, medicationRequestRow.prescriptionId(), resource,
+					"patient-" + medicationRequestRow.patientId());
 		}
 
 		watermarkService.advanceWatermarkToTableMax(RESOURCE_TYPE, LEGACY_TABLE);
