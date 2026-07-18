@@ -76,3 +76,7 @@ app:
     # 회전 절차는 docs/runbooks/key-rotation.md 참고.
     envelope:
       kek: ${ENVELOPE_KEK:}
+    # Phase 4 Step 4.3: Date shifting HMAC 키(DateShifter) - Pseudonymizer와 별도 키.
+    # 하드코딩 금지 - 운영에서는 DATE_SHIFTER_HMAC_KEY 환경변수로 실제 키를 주입한다.
+    date-shifter:
+      hmac-key: ${DATE_SHIFTER_HMAC_KEY:dev-only-date-shifter-hmac-key-change-me}
