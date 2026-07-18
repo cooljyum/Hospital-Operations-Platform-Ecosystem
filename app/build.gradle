@@ -35,6 +35,14 @@ dependencies {
 
 	// HAPI FHIR R4 구조체 라이브러리 (Phase 2 FHIR 변환 계층에서 사용)
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:${hapiFhirVersion}"
+	// Phase 2 Step 2.3: FhirValidator(구조/인스턴스 검증)에 필요.
+	// hapi-fhir-validation-resources-r4는 DefaultProfileValidationSupport가 참조하는
+	// R4 기본 StructureDefinition/ValueSet 리소스 번들을 제공한다(전체 프로파일 검증이
+	// 아니라 기본 R4 인스턴스 검증 수준으로만 쓴다 — PLAN.md 지시대로 "과함" 방지).
+	testImplementation "ca.uhn.hapi.fhir:hapi-fhir-validation:${hapiFhirVersion}"
+	testImplementation "ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:${hapiFhirVersion}"
+	// HAPI-2200: ValidationSupportChain이 캐시 서비스 프로바이더를 요구한다(caffeine 기본).
+	testImplementation "ca.uhn.hapi.fhir:hapi-fhir-caching-caffeine:${hapiFhirVersion}"
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
