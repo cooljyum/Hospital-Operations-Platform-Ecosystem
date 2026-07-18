@@ -55,6 +55,13 @@ sync:
   job:
     enabled: ${SYNC_JOB_ENABLED:false}
 
+# Phase 6 Step 6.1: PATIENT_VISIT_SUMMARY(V13) 전체 재계산 배치(summaryRefreshJob) 설정.
+# 기본은 비활성 - SyncJob과 같은 "명시적 opt-in" 패턴.
+summary:
+  refresh:
+    job:
+      enabled: ${SUMMARY_REFRESH_JOB_ENABLED:false}
+
 # Phase 3 Step 3.1: 로컬 검증/통합테스트용 계정 부팅 시 시딩(SecurityDataSeeder) 스위치.
 # 기본 true. H2 인메모리 + Flyway 비활성 조합으로 도는 기존 스모크 테스트
 # (HospitalOpsLabApplicationTests, DashboardControllerTests)는 APP_USER/APP_ROLE
