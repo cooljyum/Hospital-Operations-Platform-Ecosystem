@@ -1,0 +1,19 @@
+-- Phase 8 Step 8.3: 슬로우 쿼리 튜닝 — AUDIT_LOG.target_pk 인덱스 추가.
+--
+-- 배경: AuditLogRepository#search (Phase 5.2 감사 로그 조회 화면 /audit/preview의
+-- 필터 검색)는 actor_username/target_pk/from/to 4개 파라미터를 전부 선택적으로 받는
+-- "catch-all" JPQL 패턴이다:
+--   (:actorUsername IS NULL OR a.actorUsername = :actorUsername)
+--   AND (:targetPk IS NULL OR a.targetPk = :targetPk)
+--   AND (:from IS NULL OR a.occurredAt >= :from)
+--   AND (:to IS NULL OR a.occurredAt <= :to)
+--   ORDER BY a.occurredAt DESC, a.auditId DESC
+-- AUDIT_LOG에는 (actor_username, occurred_at) 복합 인덱스(V10)와 result_code 단일
+-- 인덱스만 있고 target_pk에는 인덱스가 없었다. target_pk는 BulkDecryptionApprovalService
+-- (요청 ID를 target_pk로 기록)처럼 실제로 감사자가 "이 대상 PK로 조회된 이력을 전부
+-- 보여줘"라고 검색하는 실사용 경로이므로, actor_username/기간 없이 target_pk만으로
+-- 검색하면 인덱스를 전혀 못 타고 항상 풀 테이블 스캔(+ filesort)이 발생한다.
+--
+-- 튜닝 전/후 EXPLAIN·실측 시간 비교는 docs/tuning/2026-07-20-audit-log-target-pk.md
+-- 참고 (합성 벤치마크 데이터 50만 건 기준 풀스캔 ~480ms -> 인덱스 ref 조회 <1ms).
+CREATE INDEX idx_audit_log_target_pk ON AUDIT_LOG (target_pk);
