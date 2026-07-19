@@ -1,0 +1,239 @@
+# Phase 8 Step 8.1: 장애 시나리오 재현·대응 로그북(docs/incidents/*.md)이 참조하는 Grafana
+# 알림 규칙 3종. breakglass-alerting.yml(Phase 7.2)과 같은 패턴(컨택트 포인트 + Alerting
+# rule group)을 따르되, 이 파일은 Phase 8.1에서 재현한 운영 장애 3종(DB 커넥션 풀 고갈,
+# 배치 job 실패, 디스크 여유공간 저하)을 감지한다. 각 규칙의 실제 발동 여부는 breakglass와
+# 동일하게 Grafana Alerting HTTP API(/api/alertmanager/grafana/api/v2/alerts)로 독립
+# 검증했다 - 근거는 docs/incidents/ 문서를 참고.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: incident-notifications
+    receivers:
+      - uid: incident-webhook-receiver
+        type: webhook
+        settings:
+          # breakglass-alerting.yml과 동일한 데모용 placeholder - 실제 수신 서버는 없다.
+          url: http://localhost:9999/incident-webhook-placeholder
+          httpMethod: POST
+        disableResolveMessage: false
+
+groups:
+  - orgId: 1
+    name: hospital-ops-incident-alerts
+    folder: Hospital Ops Alerts
+    interval: 10s
+    rules:
+      # ---------------------------------------------------------------
+      # 1) DB 커넥션 풀 고갈: HikariCP 커넥션 획득 타임아웃이 최근 5분 내 1건이라도
+      #    발생하면 Alerting. docs/incidents/2026-07-19-db-connection-pool-exhaustion.md
+      #    §재현 절차에서 maximum-pool-size=1, connection-timeout=250ms로 낮추고 400개
+      #    동시 요청을 투입해 hikaricp_connections_timeout_total 카운터를 실측 증가시켰다.
+      # ---------------------------------------------------------------
+      - uid: hikari-pool-exhaustion-alert
+        title: "DB connection pool exhaustion (HikariCP timeout)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: increase(hikaricp_connections_timeout_total[5m])
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              legendFormat: __auto
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  query:
+                    params: ["C"]
+                  reducer:
+                    type: last
+                    params: []
+                  type: query
+              refId: C
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "HikariCP 커넥션 획득 타임아웃이 최근 5분 내 발생했습니다."
+          description: "hikaricp_connections_timeout_total 카운터가 증가했습니다 - 애플리케이션 로그의 SQLTransientConnectionException(\"Connection is not available, request timed out\")을 함께 확인하십시오. HikariPool 설정(maximum-pool-size)과 동시 요청량을 점검하십시오."
+        labels:
+          severity: critical
+          category: database
+        notification_settings:
+          receiver: incident-notifications
+        isPaused: false
+
+      # ---------------------------------------------------------------
+      # 2) 배치 job 실패: fhirSyncJob/summaryRefreshJob 실행이 실패로 기록되면 Alerting.
+      #    docs/incidents/2026-07-19-batch-job-forced-failure.md 참고 - PATIENT 테이블을
+      #    일시적으로 RENAME해 syncPatientStep의 SELECT 대상을 못 찾게 만들어 재현했다.
+      #
+      #    increase(...[5m]) 대신 순간값(threshold > 0)을 쓴다 - 재현 중 실측한 이유: 배치
+      #    실패가 프로세스 기동 직후 수백 ms 안에 발생하면(재시작 직후 첫 job 실행), Counter가
+      #    process 생애주기 첫 값(0 -> 1)으로 바뀌는 그 짧은 순간을 Prometheus의 고정 스크레이프
+      #    간격(15s)이 우연히 포착하지 못하는 한 increase()가 실제 실패를 0 증가로 계산하는
+      #    사각지대가 있었다(hospitalops.batch.job.runs 카운터를 생성자에서 0으로 미리
+      #    등록하도록 고쳤어도, "0으로 스크레이프될 기회" 자체가 250ms 미만이면 부족하다).
+      #    누적 실패 총계가 1 이상이면 즉시 Alerting으로 취급하는 게 배치 실패의 운영
+      #    의미상으로도 더 적절하다(재시작 전까지는 계속 "미해결"로 유지되어야 한다).
+      # ---------------------------------------------------------------
+      - uid: batch-job-failure-alert
+        title: "Batch job execution failed"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(hospitalops_batch_job_runs_total{status="failure"})
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              legendFormat: __auto
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  query:
+                    params: ["C"]
+                  reducer:
+                    type: last
+                    params: []
+                  type: query
+              refId: C
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "배치 job(fhirSyncJob/summaryRefreshJob) 실행이 실패했습니다."
+          description: "hospitalops_batch_job_runs_total{status=\"failure\"} 카운터가 증가했습니다 - 애플리케이션 로그와 Spring Batch BATCH_STEP_EXECUTION.exit_message를 확인해 실패 원인을 파악하십시오."
+        labels:
+          severity: warning
+          category: batch
+        notification_settings:
+          receiver: incident-notifications
+        isPaused: false
+
+      # ---------------------------------------------------------------
+      # 3) 디스크 여유공간 저하: 실사용 가능 공간 비율이 임계치 미만이면 Alerting.
+      #    프로덕션 기준값은 "여유공간 15% 미만"이다. 개발 워크스테이션의 실제 디스크는
+      #    항상 15% 밑으로 내려가지 않으므로(실측 약 50% 여유), 이 committed 값 자체는
+      #    실사용 환경 기준을 그대로 담아 둔다 - 재현 시 임계값을 일시적으로 실측 여유
+      #    비율(약 50%) 근처로 올려 파이프라인 자체가 정상 발동하는지 검증했다(자세한
+      #    절차와 실측치는 docs/incidents/2026-07-19-disk-space-threshold.md 참고).
+      # ---------------------------------------------------------------
+      - uid: disk-space-low-alert
+        title: "Disk free space below threshold"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: disk_free_bytes / disk_total_bytes
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              legendFormat: __auto
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [0.15]
+                  operator:
+                    type: and
+                  query:
+                    params: ["C"]
+                  reducer:
+                    type: last
+                    params: []
+                  type: query
+              refId: C
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "디스크 여유 공간이 임계치(15%) 미만입니다."
+          description: "disk_free_bytes / disk_total_bytes 비율이 0.15 미만으로 떨어졌습니다 - 배치 산출물/로그/MySQL 데이터 디렉터리 용량을 점검하고 불필요한 파일을 정리하십시오."
+        labels:
+          severity: critical
+          category: infrastructure
+        notification_settings:
+          receiver: incident-notifications
+        isPaused: false
