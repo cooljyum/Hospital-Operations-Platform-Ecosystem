@@ -1,5 +1,7 @@
 package com.hospitalops.batch;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -21,21 +23,30 @@ import org.springframework.stereotype.Component;
  * <p>매 실행마다 {@code runAt} identifying 파라미터를 새로 부여해 Spring Batch가 매번
  * 새 JobInstance로 인식하게 한다 — 이 job은 워터마크 없이 매번 전체 재계산하는 설계라
  * "다시 돌려도 안전"하다(멱등: 여러 번 실행해도 최종 상태는 원본 집계와 항상 일치).</p>
+ *
+ * <p>Phase 7 Step 7.1: SyncJobRunner와 동일하게 {@code runOnce()}에서 매 실행 결과를
+ * {@code hospitalops.batch.job.runs} 카운터(job=summaryRefreshJob, status=success|failure
+ * 태그)로 기록한다.</p>
  */
 @Component
 public class SummaryRefreshJobRunner implements CommandLineRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(SummaryRefreshJobRunner.class);
 
+	private static final String METRIC_NAME = "hospitalops.batch.job.runs";
+	private static final String JOB_TAG_VALUE = "summaryRefreshJob";
+
 	private final SummaryRefreshProperties properties;
 	private final JobLauncher jobLauncher;
 	private final Job summaryRefreshJob;
+	private final MeterRegistry meterRegistry;
 
 	public SummaryRefreshJobRunner(SummaryRefreshProperties properties, JobLauncher jobLauncher,
-			Job summaryRefreshJob) {
+			Job summaryRefreshJob, MeterRegistry meterRegistry) {
 		this.properties = properties;
 		this.jobLauncher = jobLauncher;
 		this.summaryRefreshJob = summaryRefreshJob;
+		this.meterRegistry = meterRegistry;
 	}
 
 	@Override
@@ -53,6 +64,22 @@ public class SummaryRefreshJobRunner implements CommandLineRunner {
 		JobParameters params = new JobParametersBuilder()
 				.addLong("runAt", System.currentTimeMillis())
 				.toJobParameters();
-		return jobLauncher.run(summaryRefreshJob, params);
+		try {
+			JobExecution execution = jobLauncher.run(summaryRefreshJob, params);
+			recordOutcome(execution.getStatus().isUnsuccessful() ? "failure" : "success");
+			return execution;
+		} catch (Exception e) {
+			recordOutcome("failure");
+			throw e;
+		}
+	}
+
+	private void recordOutcome(String status) {
+		Counter.builder(METRIC_NAME)
+				.tag("job", JOB_TAG_VALUE)
+				.tag("status", status)
+				.description("Spring Batch job 실행 결과 카운트(성공/실패)")
+				.register(meterRegistry)
+				.increment();
 	}
 }

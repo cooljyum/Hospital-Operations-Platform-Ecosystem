@@ -56,6 +56,12 @@ public class SecurityConfig {
 
 		http.authorizeHttpRequests(auth -> {
 			auth.requestMatchers("/login", "/adminlte/**").permitAll();
+			// Phase 7 Step 7.1: Prometheus 스크레이퍼는 로그인 세션 없이 호출한다 - 역할
+			// 기반(ACCESS_POLICY_RULES) 대상이 아니라 /login, /adminlte/**와 같은 성격의
+			// 하드코딩 permitAll 인프라 경로로 취급한다. /actuator/metrics는 여기 포함하지
+			// 않는다 - 개별 메트릭 값을 드러내므로 ACCESS_POLICY_RULES(V14)로 감사자/
+			// 전산관리자 전용으로 좁힌다(roleNamesByUrlPattern 루프가 처리).
+			auth.requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll();
 			roleNamesByUrlPattern.forEach((urlPattern, roleNames) ->
 					auth.requestMatchers(urlPattern).hasAnyAuthority(roleNames.toArray(new String[0])));
 			auth.requestMatchers("/emergency/**").access(breakGlassAuthorizationManager());

@@ -3,6 +3,8 @@ package com.hospitalops.breakglass;
 import com.hospitalops.security.AuditLog;
 import com.hospitalops.security.AuditLogRepository;
 import com.hospitalops.security.BreakGlassSessionAttributes;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -32,6 +34,10 @@ import java.util.Map;
  *
  * <p>실제 Slack/이메일 알림 연동은 범위 밖(PLAN.md 지시) — 구조화된 WARN 로그면
  * 충분하다.</p>
+ *
+ * <p>Phase 7 Step 7.1: grant 성공 시 {@code hospitalops.breakglass.grants} 카운터를
+ * 증가시켜 {@code /actuator/prometheus}에 노출한다 — Phase 7.2 Grafana 알림 규칙이
+ * 로그 마커 외에 이 메트릭으로도 break-glass 발생을 감지할 수 있게 한다.</p>
  */
 @Controller
 public class BreakGlassController {
@@ -40,11 +46,14 @@ public class BreakGlassController {
 
 	private static final String RESULT_CODE_GRANTED = "BREAK_GLASS_GRANTED";
 	private static final String ACTION_GRANT = "BREAK_GLASS_ACCESS_GRANT";
+	private static final String GRANT_METRIC_NAME = "hospitalops.breakglass.grants";
 
 	private final AuditLogRepository auditLogRepository;
+	private final MeterRegistry meterRegistry;
 
-	public BreakGlassController(AuditLogRepository auditLogRepository) {
+	public BreakGlassController(AuditLogRepository auditLogRepository, MeterRegistry meterRegistry) {
 		this.auditLogRepository = auditLogRepository;
+		this.meterRegistry = meterRegistry;
 	}
 
 	@PostMapping("/breakglass/grant")
@@ -74,6 +83,11 @@ public class BreakGlassController {
 				ip,
 				true,
 				RESULT_CODE_GRANTED));
+
+		Counter.builder(GRANT_METRIC_NAME)
+				.description("Break-glass 응급 접근 승인 횟수")
+				.register(meterRegistry)
+				.increment();
 
 		// ALERT 마커: Phase 7.2 Grafana 알림 규칙이 이 로그 패턴으로 트리거하게 설계됨.
 		log.warn("ALERT: break-glass access granted - actor={}, reason={}, ip={}", actor, reason, ip);

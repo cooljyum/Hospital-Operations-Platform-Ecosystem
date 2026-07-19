@@ -29,6 +29,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 
+	// Phase 7 Step 7.1: Actuator + Micrometer(Prometheus) 메트릭 노출.
+	// docker/prometheus/prometheus.yml이 이미 /actuator/prometheus를 스크레이프 대상으로
+	// 잡아 두고 있었다(Phase 7.1 도입 전까지는 타겟 DOWN이 "예상된 동작"이라는 주석과 함께).
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-mysql'
 	runtimeOnly 'com.mysql:mysql-connector-j'
