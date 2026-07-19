@@ -27,6 +27,10 @@ import org.springframework.stereotype.Component;
  * <p>Phase 7 Step 7.1: SyncJobRunner와 동일하게 {@code runOnce()}에서 매 실행 결과를
  * {@code hospitalops.batch.job.runs} 카운터(job=summaryRefreshJob, status=success|failure
  * 태그)로 기록한다.</p>
+ *
+ * <p>Phase 8 Step 8.1 보완: SyncJobRunner와 동일한 이유로 생성자에서 status=success/failure
+ * 시계열을 카운트 0으로 미리 등록한다(Prometheus increase() 콜드스타트 공백 방지 -
+ * {@link SyncJobRunner}의 클래스 주석 참고).</p>
  */
 @Component
 public class SummaryRefreshJobRunner implements CommandLineRunner {
@@ -47,6 +51,20 @@ public class SummaryRefreshJobRunner implements CommandLineRunner {
 		this.jobLauncher = jobLauncher;
 		this.summaryRefreshJob = summaryRefreshJob;
 		this.meterRegistry = meterRegistry;
+		registerZeroBaseline("success");
+		registerZeroBaseline("failure");
+	}
+
+	/**
+	 * status 태그 조합을 카운트 0으로 미리 등록해, 이 프로세스 생애주기의 "첫" 실행
+	 * 결과도 Prometheus increase()/rate() 쿼리가 0 -> N 증가로 정상 관측하게 한다.
+	 */
+	private void registerZeroBaseline(String status) {
+		Counter.builder(METRIC_NAME)
+				.tag("job", JOB_TAG_VALUE)
+				.tag("status", status)
+				.description("Spring Batch job 실행 결과 카운트(성공/실패)")
+				.register(meterRegistry);
 	}
 
 	@Override

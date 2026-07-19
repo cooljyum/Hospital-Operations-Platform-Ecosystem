@@ -29,6 +29,14 @@ import org.springframework.stereotype.Component;
  * 공유하는 단일 진입점)에서 매 실행 결과(성공/실패)를 {@code hospitalops.batch.job.runs}
  * 카운터로 기록한다 - job/status 태그로 구분해 {@code /actuator/prometheus}에 노출된다.
  * jobLauncher.run 자체가 예외를 던지는 경우(job 실행 자체 실패)도 실패로 집계한다.</p>
+ *
+ * <p>Phase 8 Step 8.1(장애 재현 로그북) 보완: Micrometer {@link Counter}는 처음
+ * {@code increment()}가 호출되기 전까지 해당 태그 조합의 시계열이 Prometheus에 아예
+ * 존재하지 않는다("lazy 등록"). 재시작 직후 배치가 처음으로 실패하면 이전 스크레이프에
+ * 그 시계열이 전혀 없었으므로, Prometheus {@code increase()}가 비교할 "이전 값(0)"이
+ * 없어 실제로는 발생한 실패인데도 증가량이 0으로 계산되는 관측 공백이 있었다(2026-07-19
+ * DB 커넥션 풀 고갈/배치 실패 재현 드릴에서 실측 확인 - docs/incidents/ 참고). 생성자에서
+ * status=success/failure 두 시계열을 미리(카운트 0으로) 등록해 이 공백을 없앤다.</p>
  */
 @Component
 public class SyncJobRunner implements CommandLineRunner {
@@ -49,6 +57,20 @@ public class SyncJobRunner implements CommandLineRunner {
 		this.jobLauncher = jobLauncher;
 		this.fhirSyncJob = fhirSyncJob;
 		this.meterRegistry = meterRegistry;
+		registerZeroBaseline("success");
+		registerZeroBaseline("failure");
+	}
+
+	/**
+	 * status 태그 조합을 카운트 0으로 미리 등록해, 이 프로세스 생애주기의 "첫" 실행
+	 * 결과도 Prometheus increase()/rate() 쿼리가 0 -> N 증가로 정상 관측하게 한다.
+	 */
+	private void registerZeroBaseline(String status) {
+		Counter.builder(METRIC_NAME)
+				.tag("job", JOB_TAG_VALUE)
+				.tag("status", status)
+				.description("Spring Batch job 실행 결과 카운트(성공/실패)")
+				.register(meterRegistry);
 	}
 
 	@Override
