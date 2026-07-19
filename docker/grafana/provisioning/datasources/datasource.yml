@@ -3,6 +3,9 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
+    # 고정 uid를 명시한다 - Phase 7.2 대시보드 JSON/알림 규칙 YAML이 이 uid를
+    # (자동생성되는 값 대신) 안정적으로 참조하기 위함.
+    uid: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true

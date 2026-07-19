@@ -6,10 +6,25 @@ scrape_configs:
   # Spring Boot Actuator + Micrometer 메트릭 엔드포인트.
   # Phase 7.1에서 spring-boot-starter-actuator + micrometer-registry-prometheus 추가 전까지는
   # /actuator/prometheus가 존재하지 않아 이 타겟은 DOWN으로 보일 수 있다(예상된 동작).
+  #
+  # 타겟이 두 개인 이유(Phase 7.2):
+  #   - app:8080            : docker-compose의 `app` 서비스가 실제로 떠 있는 "정식" 배포 시나리오용
+  #                            타겟. 이 서비스는 아직 검증되지 않아(Dockerfile 미검증, Phase 7 범위 밖)
+  #                            지금은 DOWN으로 보이는 게 정상이다 - 향후 앱 컨테이너화가 끝나면 이
+  #                            타겟만으로 충분해진다. 그때도 설정을 다시 바꿀 필요 없게 지금 유지한다.
+  #   - host.docker.internal:8080 : 이번 Phase 7.2 검증에 실제로 쓰는 타겟. 로컬 dev MySQL(3306,
+  #                            네이티브 mysqld)을 건드리지 않기 위해 앱은 docker-compose가 아니라
+  #                            `gradlew bootRun`으로 호스트에서 직접 띄운다. Prometheus는 Docker
+  #                            컨테이너 안에서 돌므로 호스트의 localhost:8080에 직접 닿을 수 없고,
+  #                            Docker Desktop이 제공하는 host.docker.internal 별칭으로 호스트
+  #                            루프백을 우회해야 한다. 두 타겟을 같은 job에 공존시켜 두면, 오늘은
+  #                            host.docker.internal만 UP이고 app:8080은 DOWN인 게 정상이며, 나중에
+  #                            앱을 컨테이너화해 검증할 때는 반대로 app:8080만 UP이어도 그대로 쓸 수
+  #                            있다(둘 다 지워야 하는 시점이 오지 않는다).
   - job_name: 'hospital-ops-app'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['app:8080']
+      - targets: ['app:8080', 'host.docker.internal:8080']
 
   - job_name: 'prometheus'
     static_configs:

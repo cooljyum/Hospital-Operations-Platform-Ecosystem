@@ -1,0 +1,96 @@
+# Phase 7.2: break-glass 발생 시 Grafana 알림 규칙이 트리거되도록 하는 provisioning 파일.
+#
+# 흐름: BreakGlassController.grant()가 성공할 때마다 hospitalops_breakglass_grants_total
+# 카운터가 증가한다(Phase 7.1) -> Prometheus가 15s 간격으로 스크레이프 -> 아래 규칙이
+# increase(...[5m]) > 0 을 감지하면 Alerting 상태로 전이한다.
+#
+# 컨택트 포인트는 데모/검증 목적의 최소 webhook(존재하지 않는 URL)이다 - 실제 Slack/이메일
+# 연동은 BreakGlassController의 주석에도 명시했듯 범위 밖이다. 규칙의 firing 여부는
+# Grafana Alerting HTTP API(/api/alertmanager/grafana/api/v2/alerts,
+# /api/v1/provisioning/alert-rules)로 독립적으로 확인 가능하다.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: breakglass-notifications
+    receivers:
+      - uid: breakglass-webhook-receiver
+        type: webhook
+        settings:
+          # 데모용 placeholder - 실제로 수신하는 서버는 없다. Grafana는 알림 발송을
+          # 시도하고 실패 로그를 남기겠지만, 규칙 자체의 firing 상태(API로 조회 가능)에는
+          # 영향이 없다.
+          url: http://localhost:9999/breakglass-webhook-placeholder
+          httpMethod: POST
+        disableResolveMessage: false
+
+groups:
+  - orgId: 1
+    name: hospital-ops-security-alerts
+    folder: Hospital Ops Alerts
+    interval: 10s
+    rules:
+      - uid: breakglass-grant-alert
+        title: "Break-glass access granted"
+        condition: C
+        data:
+          # A: 최근 5분간 break-glass grant 증가량 (Prometheus instant query)
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: increase(hospitalops_breakglass_grants_total[5m])
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              legendFormat: __auto
+              refId: A
+          # B: A의 마지막 값으로 reduce
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          # C: B > 0 이면 Alerting
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  query:
+                    params: ["C"]
+                  reducer:
+                    type: last
+                    params: []
+                  type: query
+              refId: C
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "Break-glass 응급 접근이 최근 5분 내 승인되었습니다."
+          description: "hospitalops_breakglass_grants_total 카운터가 증가했습니다 - AUDIT_LOG의 BREAK_GLASS_GRANTED 레코드 및 애플리케이션 WARN 로그(\"ALERT: break-glass access granted\")를 함께 확인하십시오."
+        labels:
+          severity: warning
+          category: security
+        notification_settings:
+          receiver: breakglass-notifications
+        isPaused: false

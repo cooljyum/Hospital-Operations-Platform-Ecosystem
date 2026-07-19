@@ -28,3 +28,7 @@ replay_pid*
 # - data/: Synthea 실행 산출물(FHIR bundle/CSV, 대량). 실데이터 아님(전부 합성)이나 커밋 대상 아님.
 /scripts/vendor/
 /data/
+
+# docker compose 로컬 실값 환경변수 파일 (DB 비밀번호, Grafana admin 비밀번호 등) - 커밋 금지.
+# docker/.env.example을 복사해 로컬에서만 채운다.
+/docker/.env
