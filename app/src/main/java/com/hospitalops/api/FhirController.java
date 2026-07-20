@@ -78,6 +78,11 @@ public class FhirController {
 		return findResource("MedicationRequest", id);
 	}
 
+	@GetMapping(value = "/Condition/{id}")
+	public ResponseEntity<String> getCondition(@PathVariable String id) {
+		return findResource("Condition", id);
+	}
+
 	@GetMapping(value = "/Encounter")
 	public ResponseEntity<String> searchEncounter(@RequestParam(required = false) String patient) {
 		return searchByPatient("Encounter", patient);
@@ -91,6 +96,11 @@ public class FhirController {
 	@GetMapping(value = "/MedicationRequest")
 	public ResponseEntity<String> searchMedicationRequest(@RequestParam(required = false) String patient) {
 		return searchByPatient("MedicationRequest", patient);
+	}
+
+	@GetMapping(value = "/Condition")
+	public ResponseEntity<String> searchCondition(@RequestParam(required = false) String patient) {
+		return searchByPatient("Condition", patient);
 	}
 
 	private ResponseEntity<String> findResource(String resourceType, String fhirId) {

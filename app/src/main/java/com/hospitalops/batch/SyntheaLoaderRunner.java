@@ -21,6 +21,8 @@ import java.util.Map;
  * Phase 1 Step 1.3: Synthea 산출 CSV(patients/encounters/observations/medications)를
  * 레거시 HIS 스키마(PATIENT/VISIT/LAB_RESULT/PRESCRIPTION)에 적재하는 배치.
  *
+ * <p>Phase 10 Step 10.2: conditions.csv -> DIAGNOSIS 적재를 추가했다(5번째 legacy 테이블).</p>
+ *
  * <p>Synthea CSV의 UUID(Id/PATIENT/ENCOUNTER 컬럼)를 자연키로 삼아 upsert하므로
  * 재실행해도 중복 행이 생기지 않는다(멱등). PATIENT.source_patient_uuid,
  * VISIT.source_encounter_uuid, 그리고 LAB_RESULT/PRESCRIPTION의 복합 UNIQUE 제약
@@ -64,7 +66,7 @@ public class SyntheaLoaderRunner implements CommandLineRunner {
 	}
 
 	/**
-	 * 지정한 디렉터리의 4개 CSV를 순서대로(환자 -> 내원 -> 검사결과/처방) 적재한다.
+	 * 지정한 디렉터리의 5개 CSV를 순서대로(환자 -> 내원 -> 검사결과/처방/진단) 적재한다.
 	 * 여러 번 호출해도 안전하다(upsert 기반 멱등).
 	 */
 	public LoadSummary load(Path csvDir) {
@@ -73,7 +75,9 @@ public class SyntheaLoaderRunner implements CommandLineRunner {
 			Map<String, Long> visitIdByUuid = loadEncounters(csvDir.resolve("encounters.csv"), patientIdByUuid);
 			int labResultsUpserted = loadObservations(csvDir.resolve("observations.csv"), patientIdByUuid, visitIdByUuid);
 			int prescriptionsUpserted = loadMedications(csvDir.resolve("medications.csv"), patientIdByUuid, visitIdByUuid);
-			return new LoadSummary(patientIdByUuid.size(), visitIdByUuid.size(), labResultsUpserted, prescriptionsUpserted);
+			int diagnosesUpserted = loadConditions(csvDir.resolve("conditions.csv"), patientIdByUuid, visitIdByUuid);
+			return new LoadSummary(patientIdByUuid.size(), visitIdByUuid.size(), labResultsUpserted,
+					prescriptionsUpserted, diagnosesUpserted);
 		} catch (IOException e) {
 			throw new IllegalStateException("Synthea CSV 적재 중 I/O 오류: " + csvDir, e);
 		}
@@ -218,6 +222,45 @@ public class SyntheaLoaderRunner implements CommandLineRunner {
 		return upserted;
 	}
 
+	/**
+	 * Phase 10 Step 10.2: conditions.csv(START/STOP/PATIENT/ENCOUNTER/SYSTEM/CODE/
+	 * DESCRIPTION) -> DIAGNOSIS 적재. SYSTEM 컬럼(완전한 FHIR 코드시스템 URI)을 그대로
+	 * code_system에 저장한다 -- V17 마이그레이션 설계 판단 1 참고(CODE_SET 변환 불필요).
+	 */
+	private int loadConditions(Path csvFile, Map<String, Long> patientIdByUuid, Map<String, Long> visitIdByUuid)
+			throws IOException {
+		int upserted = 0;
+		for (Map<String, String> row : SyntheaCsvReader.readAsMaps(csvFile)) {
+			String patientUuid = row.get("PATIENT");
+			String encounterUuid = row.get("ENCOUNTER");
+			Long patientId = patientIdByUuid.get(patientUuid);
+			Long visitId = visitIdByUuid.get(encounterUuid);
+			if (patientId == null || visitId == null) {
+				log.warn("conditions.csv 행(PATIENT={}, ENCOUNTER={})의 매핑을 찾지 못해 건너뜁니다.",
+						patientUuid, encounterUuid);
+				continue;
+			}
+			if (blank(row.get("START")) == null) {
+				// DIAGNOSIS.diagnosed_at은 NOT NULL(V17) -- 실측 데이터(295건)에는 없었지만
+				// START가 비어 있는 행이 나오면 삽입 대신 건너뛴다(다른 loader들의 방어적
+				// skip 패턴과 동일).
+				log.warn("conditions.csv 행(PATIENT={}, ENCOUNTER={}, CODE={})의 START가 비어 있어 건너뜁니다.",
+						patientUuid, encounterUuid, row.get("CODE"));
+				continue;
+			}
+
+			jdbcTemplate.update(
+					"INSERT INTO DIAGNOSIS (visit_id, patient_id, diagnosed_at, resolved_at, code_system, code, description) " +
+							"VALUES (?,?,?,?,?,?,?) " +
+							"ON DUPLICATE KEY UPDATE patient_id=VALUES(patient_id), resolved_at=VALUES(resolved_at), " +
+							"code_system=VALUES(code_system), description=VALUES(description)",
+					visitId, patientId, parseDate(row.get("START")), parseDate(row.get("STOP")),
+					blank(row.get("SYSTEM")), required(row, "CODE"), blank(row.get("DESCRIPTION")));
+			upserted++;
+		}
+		return upserted;
+	}
+
 	private static String required(Map<String, String> row, String column) {
 		String value = blank(row.get(column));
 		if (value == null) {
@@ -267,6 +310,7 @@ public class SyntheaLoaderRunner implements CommandLineRunner {
 		}
 	}
 
-	public record LoadSummary(int patients, int visits, int labResultsUpserted, int prescriptionsUpserted) {
+	public record LoadSummary(int patients, int visits, int labResultsUpserted, int prescriptionsUpserted,
+			int diagnosesUpserted) {
 	}
 }

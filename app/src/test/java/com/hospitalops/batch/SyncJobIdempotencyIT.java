@@ -46,7 +46,7 @@ class SyncJobIdempotencyIT {
 		Map<String, Long> byType = countsByType.stream().collect(java.util.stream.Collectors.toMap(
 				row -> (String) row.get("resource_type"),
 				row -> ((Number) row.get("cnt")).longValue()));
-		assertThat(byType).containsOnlyKeys("Patient", "Encounter", "Observation", "MedicationRequest");
+		assertThat(byType).containsOnlyKeys("Patient", "Encounter", "Observation", "MedicationRequest", "Condition");
 		byType.values().forEach(cnt -> assertThat(cnt).isGreaterThan(0L));
 
 		// 각 리소스 타입의 이번 synced_at 스냅샷(2회차 실행 후 "하나도 안 바뀌었는지"
@@ -61,7 +61,7 @@ class SyncJobIdempotencyIT {
 				.collect(java.util.stream.Collectors.toMap(
 						row -> (String) row.get("resource_type"),
 						row -> JdbcTemporalSupport.toLocalDateTime(row.get("last_synced_at"))));
-		assertThat(watermarksAfterFirst).containsOnlyKeys("Patient", "Encounter", "Observation", "MedicationRequest");
+		assertThat(watermarksAfterFirst).containsOnlyKeys("Patient", "Encounter", "Observation", "MedicationRequest", "Condition");
 		watermarksAfterFirst.values().forEach(ts -> assertThat(ts).isAfter(SyncWatermarkService.EPOCH));
 
 		// --- 2회차 실행 ---

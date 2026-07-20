@@ -87,6 +87,16 @@ class FhirControllerIT {
 
 	@Test
 	@WithMockUser
+	void getConditionReturnsStoredFhirJsonForRealSyncedRow() throws Exception {
+		String fhirId = firstFhirId("Condition");
+
+		mockMvc.perform(get("/fhir/Condition/{id}", fhirId).accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Condition\"")));
+	}
+
+	@Test
+	@WithMockUser
 	void unknownIdReturnsNotFound() throws Exception {
 		mockMvc.perform(get("/fhir/Patient/{id}", "does-not-exist-12345").accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isNotFound());
@@ -142,6 +152,21 @@ class FhirControllerIT {
 		assertThat(expectedCount).isGreaterThan(0L);
 
 		mockMvc.perform(get("/fhir/MedicationRequest")
+						.param("patient", patientFhirId)
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"resourceType\":\"Bundle\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("\"total\":" + expectedCount)));
+	}
+
+	@Test
+	@WithMockUser
+	void searchConditionByPatientMatchesActualCacheCountForRealPatient() throws Exception {
+		String patientFhirId = firstFhirId("Patient");
+		long expectedCount = countCacheRowsForPatient("Condition", patientFhirId);
+		assertThat(expectedCount).isGreaterThan(0L);
+
+		mockMvc.perform(get("/fhir/Condition")
 						.param("patient", patientFhirId)
 						.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())

@@ -44,6 +44,7 @@ class SyntheaLoaderRunnerIT {
 		long visitsAfterFirst = count("visit");
 		long labResultsAfterFirst = count("lab_result");
 		long prescriptionsAfterFirst = count("prescription");
+		long diagnosesAfterFirst = count("diagnosis");
 
 		assertThat(first.patients()).isEqualTo(12);
 		assertThat(patientsAfterFirst).isEqualTo(12);
@@ -51,6 +52,7 @@ class SyntheaLoaderRunnerIT {
 		assertThat(visitsAfterFirst).isGreaterThan(0);
 		assertThat(labResultsAfterFirst).isGreaterThan(0);
 		assertThat(prescriptionsAfterFirst).isGreaterThan(0);
+		assertThat(diagnosesAfterFirst).isGreaterThan(0);
 
 		SyntheaLoaderRunner.LoadSummary second = loaderRunner.load(csvDir);
 
@@ -58,13 +60,16 @@ class SyntheaLoaderRunnerIT {
 		long visitsAfterSecond = count("visit");
 		long labResultsAfterSecond = count("lab_result");
 		long prescriptionsAfterSecond = count("prescription");
+		long diagnosesAfterSecond = count("diagnosis");
 
 		assertThat(patientsAfterSecond).isEqualTo(patientsAfterFirst);
 		assertThat(visitsAfterSecond).isEqualTo(visitsAfterFirst);
 		assertThat(labResultsAfterSecond).isEqualTo(labResultsAfterFirst);
 		assertThat(prescriptionsAfterSecond).isEqualTo(prescriptionsAfterFirst);
+		assertThat(diagnosesAfterSecond).isEqualTo(diagnosesAfterFirst);
 		assertThat(second.patients()).isEqualTo(first.patients());
 		assertThat(second.visits()).isEqualTo(first.visits());
+		assertThat(second.diagnosesUpserted()).isEqualTo(first.diagnosesUpserted());
 	}
 
 	@Test

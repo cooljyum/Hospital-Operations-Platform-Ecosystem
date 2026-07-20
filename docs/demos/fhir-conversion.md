@@ -1,4 +1,4 @@
-# FHIR 변환 데모 (Phase 8 Step 8.6)
+# FHIR 변환 데모 (Phase 8 Step 8.6, Phase 10 Step 10.2 갱신)
 
 > Phase 2 Step 2.1~2.4에서 구현된 "레거시 HIS DB row -> FHIR R4 JSON" 변환 파이프라인을
 > 실제 애플리케이션(로컬 native MySQL 8.4 + `./gradlew bootRun`)으로 기동해 **실제
@@ -6,10 +6,15 @@
 > FHIR JSON raw 출력)를 기록한 문서다. 상상 데이터/가짜 JSON은 없다 — 이 문서의 모든
 > row·JSON은 §5에 기록된 방식으로 이 세션에서 직접 캡처했다. 조회/증분 동기화만
 > 수행했으며 `PATIENT`/`AUDIT_LOG` 등 정본 테이블은 시연 전후로 동일하다(§7).
+>
+> **Phase 10 Step 10.2 갱신**: 5번째 FHIR 리소스 `Condition`(레거시 `DIAGNOSIS`)을
+> 추가했다. §0/§3(e)/§6/§7을 이번에 실측 갱신했고, 나머지 §1~§4/§3(a)-(d)는 Phase 8
+> 시연 당시 그대로 남겨 둔다(매퍼 코드를 이번에 수정하지 않았으므로 여전히 유효).
 
 ## 0. 변환 파이프라인 개요
 
-레거시 HIS 테이블 4개가 FHIR R4 리소스 4종으로 매핑된다(`final_summary.md` 기준 범위):
+레거시 HIS 테이블 5개가 FHIR R4 리소스 5종으로 매핑된다(Phase 10 Step 10.2에서
+`DIAGNOSIS` -> `Condition`을 추가해 `final_summary.md`의 "4~5종" 여지를 5종으로 확정):
 
 | 레거시 테이블 | FHIR 리소스 | 매퍼 | 배치 Tasklet |
 |---|---|---|---|
@@ -17,12 +22,14 @@
 | `VISIT` | `Encounter` | `com.hospitalops.fhir.EncounterMapper` | `EncounterSyncTasklet` |
 | `LAB_RESULT` | `Observation` | `com.hospitalops.fhir.ObservationMapper` | `ObservationSyncTasklet` |
 | `PRESCRIPTION` | `MedicationRequest` | `com.hospitalops.fhir.MedicationRequestMapper` | `MedicationRequestSyncTasklet` |
+| `DIAGNOSIS` | `Condition` | `com.hospitalops.fhir.DiagnosisMapper` | `DiagnosisSyncTasklet` |
 
 변환은 **요청 시점이 아니라 배치 시점**에 일어난다:
 
 1. `fhirSyncJob`(`com.hospitalops.batch.SyncJobConfig`)이 `syncPatientStep ->
-   syncEncounterStep -> syncObservationStep -> syncMedicationRequestStep` 순서로
-   4개 Tasklet을 실행한다. 각 Tasklet은 `SYNC_WATERMARK`에 저장된 리소스 타입별
+   syncEncounterStep -> syncObservationStep -> syncMedicationRequestStep ->
+   syncDiagnosisStep` 순서로 5개 Tasklet을 실행한다(마지막 스텝은 Phase 10 Step
+   10.2에서 추가). 각 Tasklet은 `SYNC_WATERMARK`에 저장된 리소스 타입별
    워터마크보다 `updated_at`이 이후인 레거시 row만 증분으로 읽어(`JdbcTemplate`),
    해당 순수 매퍼(`*Mapper.toFhir(...)`)를 호출해 HAPI FHIR 리소스 객체를 만들고,
    `FhirResourceCacheUpsertService`로 JSON 직렬화해 `FHIR_RESOURCE_CACHE`
@@ -34,7 +41,11 @@
    (`LAB_RESULT.code`/`PRESCRIPTION.medication_code`)를 매퍼가 직접 조회하지 않고
    `CodeSetLookupService`(`CODE_SET` 테이블)가 미리 LOINC/RxNorm `Coding`으로
    해석해 매퍼에 넘긴다(코드셋에 없으면 `system` 없이 원본 코드+description만
-   폴백으로 채운다).
+   폴백으로 채운다). `Condition`은 CODE_SET을 쓰지 않는다 — Synthea
+   `conditions.csv`의 SYSTEM 컬럼이 이미 완전한 FHIR 코드시스템 URI(SNOMED CT
+   또는 ICD-10)를 제공하므로 `DIAGNOSIS.code_system`에 원본 그대로 저장해 두었다가
+   `DiagnosisMapper`가 그 값을 곧바로 `Coding.system`에 쓴다(V17 마이그레이션 설계
+   판단 참고).
 
 ## 1. 호출 방법 (재현 절차)
 
@@ -60,9 +71,11 @@ $env:SYNC_JOB_ENABLED="true"   # 기동 시 fhirSyncJob 1회 자동 실행(기�
 | `GET /fhir/Encounter/{id}` | 단건 조회 |
 | `GET /fhir/Observation/{id}` | 단건 조회 |
 | `GET /fhir/MedicationRequest/{id}` | 단건 조회 |
+| `GET /fhir/Condition/{id}` | 단건 조회(Phase 10 Step 10.2 추가) |
 | `GET /fhir/Encounter?patient={patientFhirId}` | search(`Bundle` searchset, 0건도 200) |
 | `GET /fhir/Observation?patient={patientFhirId}` | search |
 | `GET /fhir/MedicationRequest?patient={patientFhirId}` | search |
+| `GET /fhir/Condition?patient={patientFhirId}` | search(Phase 10 Step 10.2 추가) |
 
 `SecurityConfig`에 `/fhir/**`용 `ACCESS_POLICY_RULES` row가 없어 역할 제한은 없지만,
 마지막 규칙 `auth.anyRequest().authenticated()`에 걸려 **로그인 세션이 반드시
@@ -288,13 +301,92 @@ VISIT WHERE patient_id=1` = 19, 별도 확인). `Bundle.entry[].resource`가 각
 (b)와 동일한 구조의 `Encounter`다 — 예: 첫 entry가 `encounter-1`로 (b)의 응답과
 동일.
 
+### (f) Condition — `DIAGNOSIS.diagnosis_id=1` -> `GET /fhir/Condition/condition-1` (Phase 10 Step 10.2, 이번 세션 실측)
+
+원본 row (`SELECT * FROM DIAGNOSIS WHERE diagnosis_id=1`):
+
+```
+diagnosis_id: 1
+visit_id: 2
+patient_id: 2
+diagnosed_at: 1993-08-22
+resolved_at: 2022-07-24
+code_system: http://snomed.info/sct
+code: 31642005
+description: Acute gingivitis
+```
+
+FHIR JSON (`GET /fhir/Condition/condition-1` 실제 응답, 2026-07-20 세션에서 캡처):
+
+```json
+{
+  "resourceType": "Condition",
+  "id": "condition-1",
+  "clinicalStatus": {
+    "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "resolved", "display": "Resolved" }]
+  },
+  "verificationStatus": {
+    "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed", "display": "Confirmed" }]
+  },
+  "code": {
+    "coding": [{ "system": "http://snomed.info/sct", "code": "31642005", "display": "Acute gingivitis" }],
+    "text": "Acute gingivitis"
+  },
+  "subject": { "reference": "Patient/patient-2" },
+  "encounter": { "reference": "Encounter/encounter-2" },
+  "onsetDateTime": "1993-08-22",
+  "abatementDateTime": "2022-07-24"
+}
+```
+
+필드 매핑: `diagnosis_id` -> `id`(`condition-{id}`) · `patient_id` ->
+`subject.reference` · `visit_id` -> `encounter.reference` · `code_system`
+(Synthea `conditions.csv`의 SYSTEM 컬럼, 이미 완전한 FHIR 시스템 URI) ->
+`code.coding[0].system`(원본 그대로, CODE_SET 변환 없음) · `code`/`description`
+-> `code.coding[0].code`/`.display`, `code.text` · `resolved_at` 존재 여부
+(`2022-07-24`, NULL 아님) -> `clinicalStatus.coding[0].code`(`resolved`, NULL이면
+`active`) · `verificationStatus`는 항상 고정값 `confirmed`(설계 판단 — Synthea가
+확정 진단만 산출) · `diagnosed_at` -> `onsetDateTime` · `resolved_at`(존재 시) ->
+`abatementDateTime`(clinicalStatus=resolved일 때만 채움 — FHIR R4 Condition
+제약 con-4 충족, `DiagnosisMapperTests`의 HAPI 검증 테스트로 확인).
+
+같은 환자의 진행 중(미해소) 진단 예시(`diagnosis_id=2`, `resolved_at` NULL) ->
+`GET /fhir/Condition/condition-2`:
+
+```json
+{
+  "resourceType": "Condition",
+  "id": "condition-2",
+  "clinicalStatus": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active", "display": "Active" }] },
+  "verificationStatus": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed", "display": "Confirmed" }] },
+  "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "224299000", "display": "Received higher education (finding)" }], "text": "Received higher education (finding)" },
+  "subject": { "reference": "Patient/patient-1" },
+  "encounter": { "reference": "Encounter/encounter-1" },
+  "onsetDateTime": "2007-06-09"
+}
+```
+
+`resolved_at`이 NULL이라 `clinicalStatus`가 `active`이고 `abatementDateTime`
+자체가 응답에 없다(설계대로 con-4 위반을 피하려고 abatement를 아예 세팅하지
+않음).
+
+### (g) search — `GET /fhir/Condition?patient=patient-2` (Phase 10 Step 10.2)
+
+```json
+{ "resourceType": "Bundle", "type": "searchset", "total": 14, "entry": [ /* 14건, 첫 entry가 condition-1 */ ] }
+```
+
+`DIAGNOSIS` 테이블에서 `patient_id=2`인 행 14건과 정확히 일치(`SELECT COUNT(*)
+FROM DIAGNOSIS WHERE patient_id=2` = 14, 별도 확인).
+
 ## 4. HAPI FHIR validator 통과 근거
 
 Phase 2.3에서 각 매퍼는 HAPI FHIR `FhirValidator`(`FhirInstanceValidator` +
 `DefaultProfileValidationSupport` + `InMemoryTerminologyServerValidationSupport`,
 R4 구조 검증 — `app/src/test/java/com/hospitalops/fhir/FhirValidatorTestSupport.java`)
-로 구조 검증하는 단위테스트를 갖고 있다. 이번 시연을 위해 4개 매퍼 테스트 클래스를
-전부 재실행해 최신 통과 여부를 실측했다:
+로 구조 검증하는 단위테스트를 갖고 있다. Phase 10 Step 10.2에서 5번째 매퍼
+(`DiagnosisMapper`)를 추가하며 5개 매퍼 테스트 클래스를 전부 재실행해 최신 통과
+여부를 실측했다:
 
 ```powershell
 cd app
@@ -310,13 +402,15 @@ cd app
 | `EncounterMapperTests` | 3 | 0 | 0 | `mappedEncounterPassesHapiFhirStructuralValidation()` PASS |
 | `ObservationMapperTests` | 4 | 0 | 0 | `mappedObservationPassesHapiFhirStructuralValidation()` PASS |
 | `MedicationRequestMapperTests` | 4 | 0 | 0 | `mappedMedicationRequestPassesHapiFhirStructuralValidation()` PASS |
+| `DiagnosisMapperTests`(Phase 10 신규) | 5 | 0 | 0 | `mappedConditionPassesHapiFhirStructuralValidation()` + `mappedActiveConditionAlsoPassesHapiFhirStructuralValidation()` 둘 다 PASS(resolved/active 케이스 각각 검증) |
 
-`BUILD SUCCESSFUL` — 16개 테스트 전부 통과(0 failures / 0 errors), 4개 리소스
+`BUILD SUCCESSFUL` — 21개 테스트 전부 통과(0 failures / 0 errors), 5개 리소스
 타입 각각 `ValidationResult.isSuccessful()`이 `true`임을 assert하는 테스트가
 포함돼 있다. 이 테스트가 검증하는 `Patient`/`Encounter`/`Observation`/
-`MedicationRequest` 객체는 §3에서 API로 실제 확인한 것과 **동일한 매퍼 코드**
-(`PatientMapper.toFhir`/`EncounterMapper.toFhir`/`ObservationMapper.toFhir`/
-`MedicationRequestMapper.toFhir`)가 만든 결과다 — 이 세션에서 매퍼 코드를 전혀
+`MedicationRequest`/`Condition` 객체는 §3에서 API로 실제 확인한 것과 **동일한
+매퍼 코드**(`PatientMapper.toFhir`/`EncounterMapper.toFhir`/
+`ObservationMapper.toFhir`/`MedicationRequestMapper.toFhir`/
+`DiagnosisMapper.toFhir`)가 만든 결과다 — 이 세션에서 4종 기존 매퍼 코드를 전혀
 수정하지 않았으므로, 단위테스트의 구조 검증 통과가 §3에서 실제로 캐시/API로
 확인한 리소스에도 그대로 적용된다.
 
@@ -354,20 +448,31 @@ cd app
 
 - [x] `PATIENT` -> `Patient`, `VISIT` -> `Encounter`, `LAB_RESULT` -> `Observation`,
       `PRESCRIPTION` -> `MedicationRequest` 4종 전부 실제 API 응답으로 확인
-- [x] `fhirSyncJob`이 4개 Tasklet을 Patient -> Encounter -> Observation ->
-      MedicationRequest 순서로 실행하고 `COMPLETED` 상태로 종료(§2 로그)
+- [x] `DIAGNOSIS` -> `Condition`(Phase 10 Step 10.2 추가 5번째 리소스) 실제 API
+      응답으로 확인(§3(f)/(g))
+- [x] `fhirSyncJob`이 5개 Tasklet을 Patient -> Encounter -> Observation ->
+      MedicationRequest -> Condition 순서로 실행하고 `COMPLETED` 상태로 종료(§2,
+      §8 로그)
 - [x] `GET /fhir/{Type}/{id}` 단건 조회가 로그인 세션 인증을 요구(미인증 302
-      `/login` 리다이렉트, 역할 무관하게 로그인만 되면 허용)
+      `/login` 리다이렉트, 역할 무관하게 로그인만 되면 허용) — `Condition`도
+      동일하게 실측 확인(§8)
 - [x] 존재하지 않는 `{id}`는 404 + 텍스트 안내(빈 캐시가 아니라 정상 미존재
-      케이스로 처리됨)
+      케이스로 처리됨) — `condition-999999`로도 실측 확인(§8)
 - [x] `GET /fhir/Encounter?patient={id}` search가 `Bundle`(searchset)로 감싸
-      반환하고, `total`이 레거시 `VISIT` 테이블의 실제 매칭 건수(19건)와 일치
+      반환하고, `total`이 레거시 `VISIT` 테이블의 실제 매칭 건수(19건)와 일치.
+      `GET /fhir/Condition?patient={id}`도 동일 패턴으로 `DIAGNOSIS` 실제 매칭
+      건수(14건)와 일치(§3(g))
 - [x] `LAB_RESULT.code`/`PRESCRIPTION.medication_code` -> LOINC/RxNorm 코드
       해석이 `CODE_SET` 조회를 통해 실제로 동작(§3(c)/(d)의 `system` URI)
 - [x] `VISIT.encounter_class`(자유 소문자 단어) -> FHIR v3-ActCode 고정 코드
       변환(`wellness`->`AMB`)이 실제 응답에 반영됨
-- [x] 4개 매퍼 전부 HAPI FHIR `FhirValidator` 구조 검증 단위테스트를 이 세션에
-      재실행해 통과 확인(§4, 16 tests / 0 failures / 0 errors)
+- [x] `DIAGNOSIS.code_system`(Synthea가 제공하는 완전한 FHIR 시스템 URI, SNOMED CT
+      또는 ICD-10) -> `Condition.code.coding[0].system` 원본 그대로 보존 확인(§3(f))
+- [x] `DIAGNOSIS.resolved_at` 존재 여부 -> `clinicalStatus`(resolved/active) 파생
+      및 `abatementDateTime`이 resolved일 때만 채워짐(con-4 충족)을 resolved/active
+      두 케이스 모두 실제 응답으로 확인(§3(f))
+- [x] 5개 매퍼 전부 HAPI FHIR `FhirValidator` 구조 검증 단위테스트를 이 세션에
+      재실행해 통과 확인(§4, 21 tests / 0 failures / 0 errors)
 
 ## 7. DB 변형 여부 확인
 
@@ -411,3 +516,78 @@ Encounter 511 / Observation 3759 / MedicationRequest 145`건으로 동일했다 
 구조 — 이 Step의 범위 밖이라 별도로 정리하지 않았다). §3의 샘플은 전부
 `patient_id=1`(양쪽 테이블에 모두 존재, 가장 최근인 2026-07-19에 재동기화된 행)
 기준이라 이 불일치의 영향을 받지 않는다.
+
+## 8. Phase 10 Step 10.2 실측 기록 (`Condition` 추가, 2026-07-20 세션)
+
+### 8.1 절차
+
+1. 세션 시작 시 로컬 native `mysqld`(PID 25912, 29640)가 이미 떠 있는 상태를
+   확인하고 그대로 두었다(정본 DB, 이번 세션이 새로 띄우지 않음).
+2. V17 마이그레이션(`DIAGNOSIS` 테이블) 작성 후 `.\gradlew.bat test --tests
+   "com.hospitalops.batch.SyntheaLoaderRunnerIT" --no-daemon`을 실행해
+   `conditions.csv`(295건)를 `DIAGNOSIS`에 실제 적재했다(로컬 DB에 대한 실제
+   INSERT — 이 테스트 자체가 `SyntheaLoaderRunner.load(...)`를 실제 DB에 대해
+   호출하는 구조).
+3. `ENVELOPE_KEK`(기존 세션과 동일한 테스트용 키) + `SYNC_JOB_ENABLED=true`로
+   `.\gradlew.bat bootRun --no-daemon`을 백그라운드 기동, 로그로 `fhirSyncJob`의
+   5번째 스텝 `syncDiagnosisStep`이 실행되고 `COMPLETED`로 끝난 것을 확인했다:
+
+   ```
+   2026-07-20T10:33:43.779+09:00  INFO ... SimpleStepHandler : Executing step: [syncDiagnosisStep]
+   2026-07-20T10:33:43.805+09:00  INFO ... AbstractStep      : Step: [syncDiagnosisStep] executed in 25ms
+   2026-07-20T10:33:43.821+09:00  INFO ... TaskExecutorJobLauncher : Job: [SimpleJob: [name=fhirSyncJob]] completed ... status: [COMPLETED] in 311ms
+   ```
+4. §5와 동일한 방식(로그인 -> 쿠키 확보 -> `curl.exe -b cookies.txt`)으로
+   `GET /fhir/Condition/{id}`, `GET /fhir/Condition?patient=...`, 미인증 요청,
+   존재하지 않는 id를 실제 호출해 §3(f)/(g)의 응답을 그대로 캡처했다.
+5. 시연 후 `Stop-Process`로 이번 세션이 띄운 gradle/bootRun 프로세스만 종료했고
+   (PID 26468 앱, 27096/23780/26416 gradle wrapper·daemon), 세션 시작 전부터
+   떠 있던 `mysqld`(25912, 29640)는 그대로 두었다.
+
+### 8.2 DB 변형 여부 (Phase 10 Step 10.2 기준)
+
+이번 Step은 **신규 테이블(`DIAGNOSIS`)에만 데이터를 적재**했고, 기존 4개 정본
+테이블(`PATIENT`/`VISIT`/`LAB_RESULT`/`PRESCRIPTION`)은 실측상 전혀 변형되지
+않았다(세션 시작 직후와 전체 작업 종료 직후 두 시점 실측):
+
+```
+patient  visit  lab_result  prescription  diagnosis
+12       509    3759        145           0     <- 세션 시작 직후(작업 착수 전)
+12       509    3759        145           295   <- 전체 테스트/시연 종료 후
+```
+
+`AUDIT_LOG`는 25건 -> 29건으로 늘었다 — 이번 세션의 `gradlew test`가
+`LoginFlowIT`/`RbacAccessIT`/`BreakGlassIT` 등 로그인·break-glass 관련 통합
+테스트를 함께 실행했기 때문이며(이 Step이 직접 감사 로그에 쓰기를 하는 코드
+경로는 없다 — `DiagnosisSyncTasklet`/`FhirController`의 `Condition` 관련 코드
+어디에도 `AuditLog` 관련 호출이 없음), 감사 로그가 append-only로 정상 누적된
+것이지 정본 데이터 훼손이 아니다. `PATIENT`/`VISIT`/`LAB_RESULT`/`PRESCRIPTION`
+4개 정본 테이블 건수는 작업 지시(§9)대로 정확히 보존됐다.
+
+`FHIR_RESOURCE_CACHE`는 4428건(세션 시작 시) -> 4723건(종료 시, `+295` =
+`DIAGNOSIS` 295건 전량이 `Condition` 캐시로 신규 upsert)으로 늘었다 — 이는
+파생 캐시 테이블이라 정본 훼손이 아니다:
+
+```
+resource_type      COUNT(*)
+Condition           295
+Encounter            511
+MedicationRequest    145
+Observation         3759
+Patient               13
+```
+
+### 8.3 전체 테스트 스위트 (Java 테스트, 기존 129개 베이스라인 대비)
+
+```powershell
+cd app
+.\gradlew.bat test --no-daemon
+```
+
+`build/test-results/test/*.xml` 실측 합산: **136 tests, 0 failures, 0 errors**
+(`BUILD SUCCESSFUL`). 신규 5개(`DiagnosisMapperTests`) + 기존 `FhirControllerIT`에
+추가한 2개(`getConditionReturnsStoredFhirJsonForRealSyncedRow`,
+`searchConditionByPatientMatchesActualCacheCountForRealPatient`) = 129 + 7 = 136으로
+정확히 일치. 기존 129개 테스트도 전부 그대로 통과했다(`SyncJobIdempotencyIT`의
+`containsOnlyKeys` 단언에 `"Condition"`을 추가한 것을 제외하면 기존 테스트 로직
+변경 없음).

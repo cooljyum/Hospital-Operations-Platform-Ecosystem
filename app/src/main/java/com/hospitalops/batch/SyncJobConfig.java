@@ -12,22 +12,24 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Phase 2 Step 2.1: 레거시 HIS -> FHIR_RESOURCE_CACHE 증분 동기화 배치(fhirSyncJob).
  *
- * <p>4개 Tasklet 스텝을 순서대로 실행한다(Patient -> Encounter -> Observation ->
- * MedicationRequest). 각 스텝은 독립적으로 자기 리소스 타입의 워터마크만 다루므로
- * 순서 자체는 결과에 영향을 주지 않지만, 참조 관계(Observation/MedicationRequest가
- * Patient/Encounter를 Reference로 가리킴)를 고려해 참조 대상을 먼저 동기화한다.</p>
+ * <p>5개 Tasklet 스텝을 순서대로 실행한다(Patient -> Encounter -> Observation ->
+ * MedicationRequest -> Condition, 마지막은 Phase 10 Step 10.2에서 추가). 각 스텝은
+ * 독립적으로 자기 리소스 타입의 워터마크만 다루므로 순서 자체는 결과에 영향을 주지
+ * 않지만, 참조 관계(Observation/MedicationRequest/Condition이 Patient/Encounter를
+ * Reference로 가리킴)를 고려해 참조 대상을 먼저 동기화한다.</p>
  */
 @Configuration
 public class SyncJobConfig {
 
 	@Bean
 	public Job fhirSyncJob(JobRepository jobRepository, Step syncPatientStep, Step syncEncounterStep,
-			Step syncObservationStep, Step syncMedicationRequestStep) {
+			Step syncObservationStep, Step syncMedicationRequestStep, Step syncDiagnosisStep) {
 		return new JobBuilder("fhirSyncJob", jobRepository)
 				.start(syncPatientStep)
 				.next(syncEncounterStep)
 				.next(syncObservationStep)
 				.next(syncMedicationRequestStep)
+				.next(syncDiagnosisStep)
 				.build();
 	}
 
@@ -59,6 +61,14 @@ public class SyncJobConfig {
 	public Step syncMedicationRequestStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			MedicationRequestSyncTasklet tasklet) {
 		return new StepBuilder("syncMedicationRequestStep", jobRepository)
+				.tasklet(tasklet, transactionManager)
+				.build();
+	}
+
+	@Bean
+	public Step syncDiagnosisStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+			DiagnosisSyncTasklet tasklet) {
+		return new StepBuilder("syncDiagnosisStep", jobRepository)
 				.tasklet(tasklet, transactionManager)
 				.build();
 	}
