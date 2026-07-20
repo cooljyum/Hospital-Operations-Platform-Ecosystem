@@ -54,6 +54,12 @@
                         <p>방문 요약 리포트</p>
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR', 'ROLE_SYSTEM_ADMIN')">
+                    <a href="/stats/patient-count-by-gender-age-band/view" class="nav-link">
+                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <p>비식별 통계</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
