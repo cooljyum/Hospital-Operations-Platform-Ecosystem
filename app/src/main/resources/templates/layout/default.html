@@ -48,6 +48,12 @@
                         <p>감사 로그</p>
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR', 'ROLE_SYSTEM_ADMIN')">
+                    <a href="/reports/patient-visit-summary" class="nav-link">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>방문 요약 리포트</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
