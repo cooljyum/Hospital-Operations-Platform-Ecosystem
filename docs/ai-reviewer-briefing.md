@@ -168,38 +168,47 @@ ${ENVELOPE_KEK:}`로 주입되며, 빈 문자열이면 `EnvelopeCrypto` 생성�
 있음), 이번 재검토 세션에서도 `./gradlew.bat test`(전체 테스트, native MySQL 미기동 상태에서도
 컨텍스트 일부는 H2로 대체돼 돌아감)를 재실행해 정상 동작을 재확인했다(§8).
 
-### 7.2 Docker Compose 경로 — **현재 실제로 깨져 있음(이번 세션에 처음 실기동 검증, 2개의 독립된 blocking 버그 발견)**
+### 7.2 Docker Compose 경로 — **2026-07-23 세션에 3개의 blocking 버그를 모두 고치고 5개 컨테이너 정상 기동까지 재검증 완료**
 
-`docker/README.md`는 여전히 "이 머신에서는 WSL2가 없어 미검증"이라고 적혀 있지만, 이는
-**stale 고지다.** 2026-07-21 세션에서 직접 확인한 결과:
+2026-07-21 재검토 세션은 진단만 하고 수정하지 않았다(아래는 그 세션의 원 기록). 2026-07-23
+세션에서 사용자 승인 하에 실제로 고쳤고, `docker compose up -d`로 5개 컨테이너가 전부
+`healthy`/`running`이 되는 것까지 재검증했다. 상세 절차·검증 결과는 `docker/README.md`
+"이 저장소가 작업된 머신에서의 검증 상태" 절에 남겨뒀다 — 여기서는 요약만 적는다.
+
+**2026-07-21 세션에서 발견한 원 기록** (이하 두 버그는 그 세션의 실측 그대로 보존):
 
 - Docker Desktop(`29.6.1`)과 WSL2(`Ubuntu` distro, `docker-desktop` distro)가 이미 설치돼 있고
-  `docker info`/`docker ps`가 정상 응답한다 — WSL2 부재는 더 이상 사실이 아니다.
+  `docker info`/`docker ps`가 정상 응답한다.
 - `docker compose up -d`를 실제로 실행해 5개 컨테이너(mysql/app/prometheus/grafana/nginx)
-  이미지를 빌드·기동을 시도했다. **mysql/prometheus/grafana/nginx 4개는 정상 기동(healthy)했지만,
-  `app` 컨테이너는 계속 재시작 루프(`Restarting (1)`)에 빠졌다.**
-- 로그로 확인한 원인은 **알려진 것(ENVELOPE_KEK 미배선)보다 먼저, 더 근본적인 곳에서 실패한다**:
-  `docker-compose.yml`의 `app.environment`에는 `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USERNAME`/
-  `DB_PASSWORD`만 있고 **`ENVELOPE_KEK`가 배선돼 있지 않다**(코드로 직접 확인, `EnvelopeCrypto`
-  생성자가 이 값이 없으면 예외를 던진다는 것도 코드로 재확인함). 그런데 이번 세션에서 **컨테이너의
-  `ENVELOPE_KEK`를 임시로 채워 넣은 뒤에도 별도의 독립된 버그가 하나 더 있었다**:
-  MySQL 8.0 컨테이너가 기본 인증 플러그인 `caching_sha2_password`로 `hospital_ops` 유저를
-  생성하는데, `application.yml`의 JDBC URL(`jdbc:mysql://...?useSSL=false&...`)에
-  `allowPublicKeyRetrieval=true`가 없어 Flyway 초기화 단계에서 `Public Key Retrieval is not
-  allowed` 예외로 먼저 죽는다(스택트레이스 실측, `FlywayMigrationInitializer` →
-  `HikariPool` → `CachingSha2PasswordPlugin`). 즉 **Flyway 커넥션 단계가 `EnvelopeCrypto` 빈보다
-  먼저 실패하므로, ENVELOPE_KEK만 고쳐서는 여전히 기동하지 않는다** — 두 버그가 독립적으로 존재하고
-  둘 다 고쳐야 `docker compose up`이 성공한다.
-- 이 두 버그를 임시로 우회(compose 파일에 `ENVELOPE_KEK` 환경변수 추가 + `.env`에 테스트용 키
-  생성 + MySQL 포트를 host 13306으로 임시 리맵해 native mysqld와 충돌 회피)한 뒤에는 5개
-  컨테이너가 전부 정상 기동하는 것까지 확인했다. **검증 후 이 우회는 전부 원상복구했다** — 이
-  저장소의 실제 파일(`docker-compose.yml`, `docker/.env`)은 재검토 전 상태 그대로다
-  (`git status --porcelain` 클린 확인).
-- **제안(적용 여부는 사용자 승인 필요, 이 세션에서는 적용하지 않음)**: (a)
-  `docker-compose.yml`의 `app.environment`에 `ENVELOPE_KEK: ${ENVELOPE_KEK}` 추가 + `.env.example`에
-  `ENVELOPE_KEK=` 항목 추가 안내, (b) `application.yml`의 datasource URL에
-  `&allowPublicKeyRetrieval=true` 추가(또는 MySQL 컨테이너를 `mysql_native_password`로 구성).
-  두 수정 없이는 Docker Compose 경로가 성립하지 않는다.
+  이미지를 빌드·기동을 시도했다. mysql/prometheus/grafana/nginx 4개는 정상 기동(healthy)했지만,
+  `app` 컨테이너는 계속 재시작 루프(`Restarting (1)`)에 빠졌다.
+- 원인 ①: `docker-compose.yml`의 `app.environment`에 `ENVELOPE_KEK`가 배선돼 있지 않아
+  `EnvelopeCrypto` 생성자가 즉시 예외를 던짐.
+- 원인 ②: MySQL 8.0 컨테이너가 기본 인증 플러그인 `caching_sha2_password`로 `hospital_ops`
+  유저를 생성하는데, `application.yml`의 JDBC URL에 `allowPublicKeyRetrieval=true`가 없어
+  Flyway 초기화 단계에서 `Public Key Retrieval is not allowed` 예외로 먼저 죽음.
+- 두 버그를 임시로 우회해 5개 컨테이너 전부 정상 기동까지는 확인했으나, **그 세션에서는 실제
+  파일을 고치지 않고 우회를 전부 원상복구했다.**
+
+**2026-07-23 세션에서 실제 수정하며 새로 발견한 세 번째 버그**: 위 ①②만 고친 뒤 재기동해보니
+`app`이 여전히 재시작 루프에 빠졌다. 로그를 보니 `Hibernate SchemaManagementException:
+Schema-validation: missing table [access_policy_rules]`였다 — Flyway는 `ACCESS_POLICY_RULES`
+(대문자, `V9__rbac_access_policy.sql`과 `AccessPolicyRule.java`의 `@Table(name="ACCESS_POLICY_RULES")`에
+쓰인 그대로)로 테이블을 만들었지만, Spring Boot의 `SpringPhysicalNamingStrategy`는 `@Table`에
+명시된 이름도 항상 소문자로 정규화해 검증한다. **로컬 native Windows MySQL은
+`lower_case_table_names`가 플랫폼 기본값으로 대소문자를 구분하지 않아** 이 불일치가 가려져 있었지만,
+**리눅스 컨테이너의 MySQL 기본값(0, 대소문자 구분)에서는 실제로 검증 실패**로 이어졌다 — 이전
+어떤 문서에도 언급되지 않았던, 이번 실기동에서 처음 발견한 버그다(같은 이유로 `APP_ROLE`,
+`APP_USER`, `AUDIT_LOG` 등 대문자로 명시된 다른 엔티티 테이블도 동일한 잠재 위험이 있었다).
+`docker-compose.yml`의 `mysql` 서비스에 `command: --lower-case-table-names=1`을 추가해 컨테이너
+MySQL을 로컬과 동일한 대소문자 비구분 동작으로 맞춰 해결했다.
+
+세 버그를 모두 고친 뒤 실제로 검증한 것: 5개 컨테이너 전부 `healthy`/`running`,
+`GET /actuator/health` → `200 UP`(직접 접근·nginx 경유 모두), Prometheus가
+`app:8080/actuator/prometheus`를 `health:"up"`으로 스크레이프, Grafana에 Prometheus datasource
+자동 프로비저닝 확인, `docker compose logs app`에 KEK/DB 에러 없음. 검증 후
+`docker compose down -v`로 컨테이너·볼륨 전량 정리, 로컬 native MySQL 재기동 및 `PATIENT` 12건
+데이터 무결성 확인까지 마쳤다.
 
 ---
 
@@ -242,16 +251,23 @@ failures, 0 errors.** 이 수치는 `docs/demos/fhir-conversion.md` §8.3(Phase 
 
 ## 10. 알려진 한계·리스크 (심각도 포함, 이번 재검토 세션에서 직접 확인)
 
-### 즉시 실행 실패를 유발하는 것
+### 즉시 실행 실패를 유발했던 것 (2026-07-23 세션에 모두 수정·재검증 완료)
 
-1. **[심각] Docker Compose 경로가 현재 기동 불가.** 두 개의 독립된 버그:
-   - `docker-compose.yml`의 `app.environment`에 `ENVELOPE_KEK` 미배선(코드 확인).
+1. **[해결됨, 2026-07-23] Docker Compose 경로가 기동 불가했던 문제.** 세 개의 독립된 버그가
+   있었다(§7.2에 상세):
+   - `docker-compose.yml`의 `app.environment`에 `ENVELOPE_KEK` 미배선 → `environment`에
+     `ENVELOPE_KEK: ${ENVELOPE_KEK}` 추가로 해결.
    - MySQL 컨테이너의 `caching_sha2_password` 인증 플러그인 + JDBC URL에
-     `allowPublicKeyRetrieval=true` 부재로 Flyway 커넥션 단계에서 먼저 실패(이번 세션에
-     실기동해서 처음 발견 — 기존 어떤 문서에도 이 두 번째 버그는 언급돼 있지 않았다).
-   두 버그를 임시로 우회해 5개 컨테이너 전부 정상 기동까지는 실측 확인했다(§7.2). 상세는
-   §7.2 참고. **이 버그 자체는 이번 세션에서 고치지 않았다** — 재검토(진단) 목적이며 수정은
-   사용자 승인 후 별도 작업이라는 지시에 따름.
+     `allowPublicKeyRetrieval=true` 부재로 Flyway 커넥션 단계에서 실패 → `application.yml`
+     datasource URL에 `&allowPublicKeyRetrieval=true` 추가로 해결.
+   - (2026-07-23 세션에 위 두 개를 고치는 과정에서 새로 발견) 리눅스 컨테이너 MySQL의
+     대소문자 구분 기본값과 Hibernate `SpringPhysicalNamingStrategy`의 소문자 정규화가 충돌해
+     `Schema-validation: missing table [access_policy_rules]`로 실패 → `mysql` 서비스에
+     `command: --lower-case-table-names=1` 추가로 해결.
+   세 수정 후 `docker compose up -d`로 5개 컨테이너 전부 `healthy`/`running` 상태 기동,
+   `/actuator/health` 200, nginx 리버스 프록시, Prometheus 스크레이프, Grafana datasource
+   프로비저닝까지 실제로 재검증했다(§7.2). 검증 후 정리(`docker compose down -v`)와 로컬 native
+   MySQL 재기동·데이터 무결성(`PATIENT` 12건) 확인도 마쳤다.
 
 2. **[낮음/설계상 알려짐] `FHIR_RESOURCE_CACHE`와 원본 테이블 간 건수 불일치.** 2026-07-21
    실측: `PATIENT` 12건 vs 캐시 `Patient` 13건, `VISIT` 509건 vs 캐시 `Encounter` 511건
@@ -262,12 +278,13 @@ failures, 0 errors.** 이 수치는 `docs/demos/fhir-conversion.md` §8.3(Phase 
    row로 추정). **숨겨진 버그가 아니라 이미 알려지고 문서화된 설계 gap**이며, 캐시 정리
    메커니즘(예: 소프트 삭제 반영)이 없다는 것은 여전히 유효한 개선 여지다.
 
-### 문서만 stale한 것
+### 문서만 stale했던 것 (2026-07-23 갱신 완료)
 
-3. **`docker/README.md`의 "이 머신에서는 WSL2가 없어 미검증" 고지가 stale하다.** 실제로는
-   Docker Desktop과 WSL2가 정상 동작하며, 이번 세션에 `docker compose up`을 실제로 실행해
-   5개 컨테이너 빌드·기동까지 확인했다(위 버그 2개를 우회한 상태에서). 이 문서는 "검증
-   불가"가 아니라 "검증했고 2개 버그로 실패한다"로 갱신돼야 정확하다.
+3. **[해결됨] `docker/README.md`의 "이 머신에서는 WSL2가 없어 미검증" 고지가 stale했다.**
+   Docker Desktop과 WSL2는 정상 동작하며, 2026-07-23 세션에 `docker compose up`을 실제로
+   실행해 5개 컨테이너가 전부 정상 기동하는 것까지 확인했다(위 버그 3개를 실제로 고친 뒤).
+   `docker/README.md`를 "검증 불가"에서 "검증했고 정상 기동한다"로 갱신했다(수정 이력·실측
+   검증 항목은 해당 문서 참고).
 
 4. **`PLAN.md`의 마이그레이션 파일 번호와 실제 파일 번호가 다르다.** 예: PLAN.md는 RBAC을
    `V4__*.sql`로, 감사 로그를 `V6__*.sql`로 예고했지만 실제로는 각각 `V9__rbac_access_policy.sql`,

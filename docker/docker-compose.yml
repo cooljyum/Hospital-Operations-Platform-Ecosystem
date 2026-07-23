@@ -3,6 +3,13 @@ services:
     image: mysql:8.0
     container_name: hospital-ops-mysql
     restart: unless-stopped
+    # lower_case_table_names=1: 로컬 native Windows MySQL은 테이블명을 대소문자 구분 없이
+    # 저장한다(플랫폼 기본값). Hibernate의 SpringPhysicalNamingStrategy는 @Table(name="...")에
+    # 대문자로 적힌 테이블명(예: ACCESS_POLICY_RULES)도 항상 소문자로 변환해 스키마 검증을
+    # 수행하므로, 리눅스 컨테이너의 MySQL 기본값(0, 대소문자 구분)에서는 이 검증이
+    # "missing table" 오류로 실패한다(직접 기동 검증으로 발견). 컨테이너를 로컬과 동일한
+    # 대소문자 비구분 동작으로 맞춰 이 불일치를 제거한다.
+    command: --lower-case-table-names=1
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
@@ -36,12 +43,13 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      ENVELOPE_KEK: ${ENVELOPE_KEK}
     ports:
       - "8080:8080"
     healthcheck:
-      # TODO(Phase 7.1): Actuator 도입 후 /actuator/health로 교체.
-      # 현재는 Spring Security 기본 로그인 페이지(GET /login, 비인증도 200)로 앱 기동 여부만 확인한다.
-      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      # Phase 7.1(Actuator + Micrometer)에서 /actuator/health가 permitAll로 노출되도록
+      # 도입 완료됨(SecurityConfig.java) — 인프라 헬스체크 용도로 이 엔드포인트를 사용한다.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 10
