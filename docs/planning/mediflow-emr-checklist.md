@@ -29,6 +29,15 @@ MediFlow EMR 목업)는 전혀 적용되지 않았다. 사용자는 draft.png의
 전체 배경·RBAC 표·구조 일치 검증 기준 14개 항목의 상세 서술은 최초 승인된 plan 내용을 아래에
 그대로 보존한다.
 
+**2026-07-26 추가**: `docs/design/design_guide.md`가 새로 확보됐다 — `docs/draft.png`를
+1672×941px 기준으로 픽셀 단위 실측 분석한 완전한 스펙(정확한 grid 좌표, 완성된 CSS 전문,
+권장 HTML 구조, 이미지 오버레이 검수법 포함). **이 문서의 색상·spacing·radius·좌표 값이
+`md/design.md`의 대응 값보다 우선한다** — primary `#1671e2`(문서작성 시점의 `md/design.md`
+`#0075de`가 아님), canvas `#ffffff`, header `#fbfbfb`, sidebar `#fafafa`, border `#e8eaed` 등.
+`md/design.md`는 배지(중립 배경+텍스트/점, 채움 칩 금지)·이모지 금지 같은 질적 원칙만 계속
+유효. Phase 11의 셸 구현은 `docs/design/design_guide.md` §2(HTML 구조)·§3(CSS)를 출발점으로
+삼고, §7의 이미지 오버레이 방법으로 검수한다.
+
 ---
 
 ## RBAC 매핑 (기본값, 구현 중 조정 가능)
