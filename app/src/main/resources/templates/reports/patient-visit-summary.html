@@ -3,17 +3,16 @@
 <head th:replace="~{layout/default :: head(title='환자별 방문 요약 리포트')}">
     <title>환자별 방문 요약 리포트</title>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
-
-    <nav th:replace="~{layout/default :: topnavbar}"></nav>
-
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
     <aside th:replace="~{layout/default :: sidebar}"></aside>
 
-    <div class="content-wrapper">
-        <div class="content-header">
-            <div class="container-fluid">
-                <h1>환자별 방문 요약 리포트</h1>
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='환자별 방문 요약 리포트', subtitle='요약 테이블(PATIENT_VISIT_SUMMARY) 기준 — summaryRefreshJob 실행 시점 스냅샷입니다.', actionLabel='필터 초기화', actionHref=@{/reports/patient-visit-summary})}"></header>
+
                 <p class="text-muted mb-0">
                     <span th:if="${refreshedAt != null}">
                         마지막 갱신: <span th:text="${refreshedAt}">2026-01-01T00:00:00</span>
@@ -23,92 +22,94 @@
                         아직 요약 데이터가 없습니다. summaryRefreshJob 실행 후 다시 조회하세요.
                     </span>
                 </p>
-            </div>
-        </div>
-        <section class="content">
-            <div class="container-fluid">
 
-                <div class="card card-outline card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">필터</h3>
-                    </div>
-                    <div class="card-body">
-                        <form method="get" th:action="@{/reports/patient-visit-summary}" class="form-inline">
-                            <div class="form-group mr-3 mb-2">
-                                <label for="q" class="mr-2">표시 ID</label>
-                                <input type="text" class="form-control" id="q"
-                                       name="q" th:value="${q}"
-                                       placeholder="예: SYN-0001" />
-                            </div>
-                            <button type="submit" class="btn btn-primary mb-2">
-                                <i class="fas fa-search"></i> 조회
-                            </button>
-                            <a th:href="@{/reports/patient-visit-summary}" class="btn btn-default mb-2 ml-2">초기화</a>
-                        </form>
-                    </div>
-                </div>
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='전체 환자', value=${total + '명'}, description='필터 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='페이지', value=${(page + 1) + ' / ' + totalPages}, description='페이지네이션')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='방문 건수 합', value=${(#lists.isEmpty(rows) ? 0 : #aggregates.sum(rows.![visitCount])) + '건'}, description='현재 페이지 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='calendar', label='최근 갱신', value=${refreshedAt != null ? refreshedAt : '—'}, description='summaryRefreshJob 기준')}"></article>
+                </section>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">조회 결과 (전체 <span th:text="${total}">0</span>건)</h3>
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>필터</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <form method="get" th:action="@{/reports/patient-visit-summary}" class="form-inline">
+                                <div class="form-group mr-3 mb-2">
+                                    <label for="q" class="mr-2">표시 ID</label>
+                                    <input type="text" class="form-control" id="q"
+                                           name="q" th:value="${q}"
+                                           placeholder="예: SYN-0001" />
+                                </div>
+                                <button type="submit" class="btn btn-primary mb-2">조회</button>
+                                <a th:href="@{/reports/patient-visit-summary}" class="btn btn-default mb-2 ml-2">초기화</a>
+                            </form>
+                        </div>
                     </div>
-                    <div class="card-body table-responsive p-0">
-                        <table class="table table-hover text-nowrap">
-                            <thead>
-                            <tr>
-                                <th>표시 ID</th>
-                                <th>이름</th>
-                                <th>방문 건수</th>
-                                <th>최초 방문일</th>
-                                <th>최근 방문일</th>
-                                <th>검사 건수</th>
-                                <th>처방 건수</th>
-                                <th>갱신 시각</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:if="${#lists.isEmpty(rows)}">
-                                <td colspan="8" class="text-center text-muted"
-                                    th:text="${hasAnyData} ? '조회 조건에 맞는 환자가 없습니다.' : '요약 테이블에 데이터가 없습니다. summaryRefreshJob 실행 후 다시 조회하세요.'">
-                                    조회된 요약이 없습니다.
-                                </td>
-                            </tr>
-                            <tr th:each="row : ${rows}">
-                                <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
-                                <td th:text="(${row.lastName} ?: '') + ' ' + (${row.firstName} ?: '')">홍 길동</td>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>조회 결과 (전체 <span th:text="${total}">0</span>건)</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>표시 ID</th>
+                                    <th>이름</th>
+                                    <th>방문 건수</th>
+                                    <th>최초 방문일</th>
+                                    <th>최근 방문일</th>
+                                    <th>검사 건수</th>
+                                    <th>처방 건수</th>
+                                    <th>갱신 시각</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(rows)}">
+                                    <td colspan="8" class="text-center text-muted"
+                                        th:text="${hasAnyData} ? '조회 조건에 맞는 환자가 없습니다.' : '요약 테이블에 데이터가 없습니다. summaryRefreshJob 실행 후 다시 조회하세요.'">
+                                        조회된 요약이 없습니다.
+                                    </td>
+                                </tr>
+                                <tr th:each="row : ${rows}">
+                                    <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
+                                    <td th:text="(${row.lastName} ?: '') + ' ' + (${row.firstName} ?: '')">홍 길동</td>
                                 <td th:text="${row.visitCount}">0</td>
-                                <td th:text="${row.firstVisitAt} ?: '-'">-</td>
-                                <td th:text="${row.lastVisitAt} ?: '-'">-</td>
+                                    <td th:text="${row.firstVisitAt} ?: '-'">-</td>
+                                    <td th:text="${row.lastVisitAt} ?: '-'">-</td>
                                 <td th:text="${row.labResultCount}">0</td>
-                                <td th:text="${row.prescriptionCount}">0</td>
-                                <td th:text="${row.refreshedAt} ?: '-'">-</td>
-                            </tr>
-                            </tbody>
-                        </table>
+                                    <td th:text="${row.prescriptionCount}">0</td>
+                                    <td th:text="${row.refreshedAt} ?: '-'">-</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="panel-footer" th:if="${totalPages > 1}">
+                            <ul class="pagination pagination-sm m-0 float-right">
+                                <li class="page-item" th:classappend="${page <= 0} ? 'disabled'">
+                                    <a class="page-link"
+                                       th:href="@{/reports/patient-visit-summary(q=${q}, page=${page - 1})}">이전</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"
+                                          th:text="(${page} + 1) + ' / ' + ${totalPages}">1 / 1</span>
+                                </li>
+                                <li class="page-item" th:classappend="${page + 1 >= totalPages} ? 'disabled'">
+                                    <a class="page-link"
+                                       th:href="@{/reports/patient-visit-summary(q=${q}, page=${page + 1})}">다음</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="card-footer clearfix" th:if="${totalPages > 1}">
-                        <ul class="pagination pagination-sm m-0 float-right">
-                            <li class="page-item" th:classappend="${page <= 0} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/reports/patient-visit-summary(q=${q}, page=${page - 1})}">이전</a>
-                            </li>
-                            <li class="page-item disabled">
-                                <span class="page-link"
-                                      th:text="(${page} + 1) + ' / ' + ${totalPages}">1 / 1</span>
-                            </li>
-                            <li class="page-item" th:classappend="${page + 1 >= totalPages} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/reports/patient-visit-summary(q=${q}, page=${page + 1})}">다음</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                </section>
+            </section>
 
-            </div>
-        </section>
-    </div>
-
-    <footer th:replace="~{layout/default :: footer}"></footer>
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
 </div>
 
 <th:block th:replace="~{layout/default :: scripts}"></th:block>
