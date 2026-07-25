@@ -90,7 +90,7 @@ MediFlow EMR 목업)는 전혀 적용되지 않았다. 사용자는 draft.png의
 - [x] 11.6 `audit/list.html` 리스킨. **완료 기준**: `AuditLogControllerIT` 무수정 통과. (이 샌드박스에 MySQL/Docker가 없어 IT 자체는 실행 불가 — 필터 폼 4개 name/GET action/`th:each` 반복/`.dot` 패턴은 diff로 직접 대조해 무변경 확인, `DashboardControllerTests`로 공통 프래그먼트 렌더링 확인. 실 MySQL 환경에서 IT 재확인 필요)
 - [x] 11.7 `reports/patient-visit-summary.html` 리스킨. **완료 기준**: `PatientVisitSummaryControllerIT` 무수정 통과. (동일한 환경 제약 — `<td>${row.visitCount}</td>`/`<td>${row.labResultCount}</td>` 셀이 속성 변경 없이 원본 그대로임을 diff로 직접 확인. 실 MySQL 환경에서 IT 재확인 필요)
 - [x] 11.8 `stats/patient-count-by-gender-age-band.html` 리스킨. **완료 기준**: `StatsViewControllerIT` 무수정 통과. (동일한 환경 제약 — k=5 억제 교차표 셀/헤더 반복 태그가 속성 변경 없이 원본 그대로임을 diff로 직접 확인. 실 MySQL 환경에서 IT 재확인 필요)
-- [ ] 11.9 AdminLTE 잔여 스타일 충돌 정리. **완료 기준**: 시각적 충돌 없음.
+- [x] 11.9 AdminLTE 잔여 스타일 충돌 정리. **완료 기준**: 시각적 충돌 없음. (이 샌드박스는 Docker Desktop 서비스가 꺼져 있고 관리자 권한 없이는 기동 불가 — MySQL 없이는 앱을 실제로 띄울 수 없어 브라우저 육안 확인을 못 했다. 대신 코드 정적 대조로 실제 CSS 충돌 2건을 확인·수정: `.panel-scroll`에 padding이 없어 필터 폼이 패널 가장자리에 붙는 문제, `overflow-x: hidden`이라 넓은 테이블/교차표가 잘리는 문제 — 둘 다 `padding: 16px`/`overflow-x: auto`로 수정. **실제 브라우저 육안 확인은 MySQL/Docker 있는 환경에서 재검증 필요.**)
 
 ## Phase 12 — 실제 대시보드
 
