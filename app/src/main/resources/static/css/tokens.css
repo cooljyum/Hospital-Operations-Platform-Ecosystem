@@ -744,8 +744,9 @@ a {
 .panel-scroll {
     min-width: 0;
     min-height: 0;
+    padding: 16px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: #d9dde2 transparent;
