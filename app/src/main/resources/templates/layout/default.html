@@ -75,39 +75,79 @@
     </div>
 </header>
 
-<aside th:fragment="sidebar" class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="#" class="brand-link">
-        <span class="brand-text font-weight-light">Hospital Ops Lab</span>
-    </a>
-    <div class="sidebar">
-        <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                <li class="nav-item">
-                    <a href="/dashboard" class="nav-link active">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>대시보드</p>
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAuthority('ROLE_AUDITOR')">
-                    <a href="/audit/preview" class="nav-link">
-                        <i class="nav-icon fas fa-clipboard-list"></i>
-                        <p>감사 로그</p>
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR', 'ROLE_SYSTEM_ADMIN')">
-                    <a href="/reports/patient-visit-summary" class="nav-link">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>방문 요약 리포트</p>
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR', 'ROLE_SYSTEM_ADMIN')">
-                    <a href="/stats/patient-count-by-gender-age-band/view" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
-                        <p>비식별 통계</p>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+<aside th:fragment="sidebar" class="sidebar">
+    <div class="sidebar-scroll">
+        <section class="sidebar-section">
+            <p class="sidebar-section-title">업무 메뉴</p>
+            <nav class="sidebar-nav" aria-label="업무 메뉴">
+                <a th:href="@{/dashboard}" class="sidebar-item">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" /><rect x="14" y="4" width="6" height="6" /><rect x="4" y="14" width="6" height="6" /><rect x="14" y="14" width="6" height="6" /></svg>
+                    <span>대시보드</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h6M9 3h6v4H9zM6 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1" /><path d="m8 14 2 2 5-5" /></svg>
+                    <span>접수</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01" /></svg>
+                    <span>예약</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h11v18H4zM15 8h5v13h-5M8 12h3" /></svg>
+                    <span>진료실</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.9-8.6a5.5 5.5 0 0 0-.1-7.8Z" /><path d="M5.5 12h3l1.2-2.2 2.1 4.4 1.3-2.2h5" /></svg>
+                    <span>간호</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3 6 6v5.5a4.5 4.5 0 1 1-9 0V9l3-6Z" /><path d="M6 14h9" /></svg>
+                    <span>검사</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h3" /></svg>
+                    <span>수납</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18V9h18v9M5 18v3M19 18v3M3 13h18M7 9V6h5v3" /><path d="M14 15h3" /></svg>
+                    <span>입원</span>
+                </a>
+                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" /><path d="M9 12h6M9 16h4" /></svg>
+                    <span>보험청구</span>
+                </a>
+                <a th:href="@{/stats/patient-count-by-gender-age-band/view}" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+                    <span>통계</span>
+                </a>
+                <a th:href="@{/admin/system}" class="sidebar-item" sec:authorize="hasAuthority('ROLE_SYSTEM_ADMIN')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.2 2.2-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3.2v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2.2-2.2.1-.1A1.7 1.7 0 0 0 6.6 15a1.7 1.7 0 0 0-1.5-1H5v-3.2h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.2-2.2.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h3.2v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.2 2.2-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+                    <span>설정</span>
+                </a>
+            </nav>
+        </section>
+
+        <section class="sidebar-section sidebar-favorites">
+            <p class="sidebar-section-title">즐겨찾기</p>
+            <nav class="sidebar-nav sidebar-nav-compact" aria-label="즐겨찾기">
+                <a th:href="@{/audit/preview}" class="sidebar-item" sec:authorize="hasAuthority('ROLE_AUDITOR')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18H7zM10 8h4M10 12h4M10 16h3" /></svg>
+                    <span>감사 로그</span>
+                </a>
+                <a th:href="@{/reports/patient-visit-summary}" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V5M16 20v-8M22 20H2" /><path d="m5 8 4-3 4 2 6-4" /></svg>
+                    <span>방문 요약 리포트</span>
+                </a>
+            </nav>
+        </section>
+    </div>
+
+    <div class="sidebar-footer-block">
+        <button type="button" class="sidebar-edit-button">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 4-1 10-10-3-3L5 16l-1 4Z" /><path d="m13 6 3 3" /></svg>
+            <span>메뉴 편집</span>
+        </button>
+        <p class="sidebar-connection-status"><span class="dot dot-success"></span><span>정상 연결</span></p>
     </div>
 </aside>
 
