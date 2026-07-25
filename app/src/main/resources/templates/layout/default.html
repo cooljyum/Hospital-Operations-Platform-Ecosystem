@@ -80,7 +80,7 @@
         <section class="sidebar-section">
             <p class="sidebar-section-title">업무 메뉴</p>
             <nav class="sidebar-nav" aria-label="업무 메뉴">
-                <a th:href="@{/dashboard}" class="sidebar-item">
+                <a th:href="@{/dashboard}" class="sidebar-item" th:classappend="${currentUri == '/dashboard'} ? 'is-active' : ''">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" /><rect x="14" y="4" width="6" height="6" /><rect x="4" y="14" width="6" height="6" /><rect x="14" y="14" width="6" height="6" /></svg>
                     <span>대시보드</span>
                 </a>
@@ -116,11 +116,11 @@
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" /><path d="M9 12h6M9 16h4" /></svg>
                     <span>보험청구</span>
                 </a>
-                <a th:href="@{/stats/patient-count-by-gender-age-band/view}" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
+                <a th:href="@{/stats/patient-count-by-gender-age-band/view}" class="sidebar-item" th:classappend="${currentUri == '/stats/patient-count-by-gender-age-band/view'} ? 'is-active' : ''" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
                     <span>통계</span>
                 </a>
-                <a th:href="@{/admin/system}" class="sidebar-item" sec:authorize="hasAuthority('ROLE_SYSTEM_ADMIN')">
+                <a th:href="@{/admin/system}" class="sidebar-item" th:classappend="${currentUri == '/admin/system'} ? 'is-active' : ''" sec:authorize="hasAuthority('ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.2 2.2-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3.2v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2.2-2.2.1-.1A1.7 1.7 0 0 0 6.6 15a1.7 1.7 0 0 0-1.5-1H5v-3.2h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.2-2.2.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h3.2v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.2 2.2-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" /></svg>
                     <span>설정</span>
                 </a>
@@ -130,11 +130,11 @@
         <section class="sidebar-section sidebar-favorites">
             <p class="sidebar-section-title">즐겨찾기</p>
             <nav class="sidebar-nav sidebar-nav-compact" aria-label="즐겨찾기">
-                <a th:href="@{/audit/preview}" class="sidebar-item" sec:authorize="hasAuthority('ROLE_AUDITOR')">
+                <a th:href="@{/audit/preview}" class="sidebar-item" th:classappend="${currentUri == '/audit/preview'} ? 'is-active' : ''" sec:authorize="hasAuthority('ROLE_AUDITOR')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18H7zM10 8h4M10 12h4M10 16h3" /></svg>
                     <span>감사 로그</span>
                 </a>
-                <a th:href="@{/reports/patient-visit-summary}" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
+                <a th:href="@{/reports/patient-visit-summary}" class="sidebar-item" th:classappend="${currentUri == '/reports/patient-visit-summary'} ? 'is-active' : ''" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V5M16 20v-8M22 20H2" /><path d="m5 8 4-3 4 2 6-4" /></svg>
                     <span>방문 요약 리포트</span>
                 </a>
