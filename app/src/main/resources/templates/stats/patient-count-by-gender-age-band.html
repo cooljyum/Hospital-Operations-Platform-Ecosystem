@@ -3,61 +3,64 @@
 <head th:replace="~{layout/default :: head(title='비식별 통계 (성별×연령대)')}">
     <title>비식별 통계 (성별×연령대)</title>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
-
-    <nav th:replace="~{layout/default :: topnavbar}"></nav>
-
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
     <aside th:replace="~{layout/default :: sidebar}"></aside>
 
-    <div class="content-wrapper">
-        <div class="content-header">
-            <div class="container-fluid">
-                <h1>비식별 통계 (성별×연령대)</h1>
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='비식별 통계 (성별×연령대)', subtitle='성별×연령대(10년 단위)별 환자 수 — k=5 익명성 기준 적용', actionLabel=null, actionHref=null)}"></header>
+
                 <p class="text-muted mb-0">
                     성별×연령대(10년 단위)별 환자 수입니다. k=<span th:text="${kThreshold}">5</span> 익명성 기준에 따라
                     셀 값이 <span th:text="${kThreshold}">5</span>명 미만이면 실제 인원 대신
                     "<span th:text="${suppressedLabel}">&lt; 5</span>"로 표시되며, 그 실제 값은 서버 응답
                     어디에도 포함되지 않습니다.
                 </p>
-            </div>
-        </div>
-        <section class="content">
-            <div class="container-fluid">
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">성별 &times; 연령대 교차표</h3>
-                    </div>
-                    <div class="card-body table-responsive p-0">
-                        <table class="table table-bordered table-hover text-nowrap">
-                            <thead>
-                            <tr>
-                                <th>연령대</th>
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='성별 구분', value=${#lists.size(genders) + '종'}, description='교차표 열')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='연령대 구간', value=${#lists.size(ageBands) + '개'}, description='10년 단위')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='익명성 기준', value=${'k=' + kThreshold}, description='미만이면 억제 표시')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='데이터 상태', value=${hasAnyData ? '있음' : '없음'}, description='집계 테이블 기준')}"></article>
+                </section>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>성별 &times; 연령대 교차표</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-bordered table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>연령대</th>
                                 <th th:each="gender : ${genders}" th:text="${gender}">M</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:if="${!hasAnyData}">
-                                <td th:attr="colspan=${#lists.size(genders) + 1}" class="text-center text-muted">
-                                    표시할 통계 데이터가 없습니다.
-                                </td>
-                            </tr>
-                            <tr th:each="ageBand : ${ageBands}">
-                                <td th:text="${ageBand} + '-' + (${ageBand} + 9)">20-29</td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${!hasAnyData}">
+                                    <td th:attr="colspan=${#lists.size(genders) + 1}" class="text-center text-muted">
+                                        표시할 통계 데이터가 없습니다.
+                                    </td>
+                                </tr>
+                                <tr th:each="ageBand : ${ageBands}">
+                                    <td th:text="${ageBand} + '-' + (${ageBand} + 9)">20-29</td>
                                 <td th:each="gender : ${genders}"
                                     th:text="${displayByKey.get(gender + '|' + ageBand)} ?: '-'">-</td>
-                            </tr>
-                            </tbody>
-                        </table>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                </section>
+            </section>
 
-            </div>
-        </section>
-    </div>
-
-    <footer th:replace="~{layout/default :: footer}"></footer>
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
 </div>
 
 <th:block th:replace="~{layout/default :: scripts}"></th:block>
