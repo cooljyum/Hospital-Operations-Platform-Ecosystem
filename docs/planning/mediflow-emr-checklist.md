@@ -80,7 +80,9 @@ MediFlow EMR 목업)는 전혀 적용되지 않았다. 사용자는 draft.png의
 
 ## Phase 11 — 디자인 시스템 기반 + 기존 실 화면 3개에 셸 적용
 
-- [ ] 11.1 `md/design.md` 토큰 → `static/css/tokens.css`. **완료 기준**: 파일 존재, `layout/default.html :: head`에서 로드, `md/design.md`의 모든 hex 값이 새 CSS에 존재.
+> **스펙 소스 갱신 (11.1 진행 중 반영)**: `docs/design/design_guide.md`가 추가됐다 — `docs/draft.png`(=`docs/design/reference-layout-mediflow-emr.png`)를 1672×941px 기준 픽셀 단위로 실측한 스펙(정확한 grid 좌표, 완성 CSS 전문, 권장 HTML 구조, 색상 hex, 라운드 값, 픽셀 검수 방법 포함). Phase 11 전체(및 이후 화면)에서 색상·타이포·spacing·radius의 **구체적 hex/치수 값은 이 문서가 `md/design.md`보다 우선**한다(더 정밀한 실측 소스이므로). `md/design.md`는 배지 규칙(중립 배경+텍스트/점, 채움 칩 금지)과 이모지 금지 같은 **질적 원칙**만 계속 유효하다.
+
+- [x] 11.1 `docs/design/design_guide.md` §3 `:root` 토큰 → `static/css/tokens.css`. **완료 기준**: 파일 존재, `layout/default.html :: head`에서 로드, `design_guide.md`의 `:root` 변수 전부(치수/색상/라운드/폰트)가 새 CSS에 동일한 이름·값으로 존재.
 - [ ] 11.2 `topnavbar` 프래그먼트 재구축(구조 사실 1~4). **완료 기준**: 렌더링 HTML에 구조 사실 1~4 존재.
 - [ ] 11.3 `sidebar` 프래그먼트 재구축: 11개 항목 전체. **완료 기준**: 구조 사실 5~8 존재, 기존 4개 실 화면 라우팅 정상.
 - [ ] 11.4 사이드바 활성 상태 동적 하이라이트. **완료 기준**: `/audit/preview` 방문 시 감사 로그 행이 하이라이트.
