@@ -1,0 +1,46 @@
+/* docs/design/design_guide.md §3 (Phase 11.1, draft.png 1672x941 실측 기준) */
+:root {
+    --topbar-height: 70px;
+    --statusbar-height: 36px;
+    --sidebar-width: 234px;
+    --workspace-padding-top: 29px;
+    --workspace-padding-right: 30px;
+    --workspace-padding-bottom: 16px;
+    --workspace-padding-left: 30px;
+    --assistant-width: 274px;
+    --assistant-gap: 20px;
+    --assistant-top-offset: 25px;
+    --heading-height: 54px;
+    --summary-height: 100px;
+    --section-gap: 20px;
+    --primary-left-width: 260px;
+    --primary-right-width: 236px;
+    --primary-gap: 14px;
+
+    --color-canvas: #ffffff;
+    --color-header: #fbfbfb;
+    --color-sidebar: #fafafa;
+    --color-statusbar: #fafafa;
+    --color-panel: #ffffff;
+    --color-panel-soft: #fbfcfe;
+    --color-border: #e8eaed;
+    --color-border-soft: #f0f1f3;
+    --color-border-strong: #dde1e6;
+    --color-text: #171a1f;
+    --color-text-secondary: #555d69;
+    --color-text-muted: #818894;
+    --color-text-faint: #a4aab3;
+    --color-primary: #1671e2;
+    --color-primary-soft: #edf3fb;
+    --color-primary-border: #c9dff9;
+    --color-success: #15966d;
+    --color-warning: #ff7a1a;
+    --color-danger: #e5484d;
+
+    --radius-control: 10px;
+    --radius-nav: 11px;
+    --radius-panel: 12px;
+    --radius-assistant: 20px;
+
+    --font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
