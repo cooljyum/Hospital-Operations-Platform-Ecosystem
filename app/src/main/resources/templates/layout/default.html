@@ -151,6 +151,66 @@
     </div>
 </aside>
 
+<header th:fragment="page-heading(title, subtitle, actionLabel, actionHref)" class="page-heading">
+    <div class="page-heading-copy">
+        <h1 th:text="${title}">페이지 제목</h1>
+        <p th:text="${subtitle}">페이지 설명</p>
+    </div>
+    <div class="page-heading-actions">
+        <span class="page-date" th:text="${#temporals.format(#temporals.createNow(), 'yyyy년 M월 d일 (E)', #locale)}">2026년 7월 26일 (일)</span>
+        <a th:if="${actionLabel != null and !#strings.isEmpty(actionLabel) and actionHref != null and !#strings.isEmpty(actionHref)}" class="secondary-button" th:href="${actionHref}" th:text="${actionLabel}">작업</a>
+        <button th:if="${actionLabel != null and !#strings.isEmpty(actionLabel) and (actionHref == null or #strings.isEmpty(actionHref))}" type="button" class="secondary-button" disabled="disabled" th:text="${actionLabel}">작업</button>
+    </div>
+</header>
+
+<article th:fragment="metric-card(iconKey, label, value, description)" class="summary-card">
+    <span class="summary-icon" th:switch="${iconKey}">
+        <svg th:case="'calendar'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18" /></svg>
+        <svg th:case="'users'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5.5a3 3 0 0 1 0 5M18 21v-2a6 6 0 0 0-3-5.2" /></svg>
+        <svg th:case="'card'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h3" /></svg>
+        <svg th:case="'chart'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+        <svg th:case="'alert'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 9v4M12 17h.01" /></svg>
+        <svg th:case="*" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></svg>
+    </span>
+    <div class="summary-copy">
+        <span class="summary-label" th:text="${label}">레이블</span>
+        <strong class="summary-value" th:text="${value}">—</strong>
+        <span class="summary-description" th:text="${description}">설명</span>
+    </div>
+</article>
+
+<aside th:fragment="ai-panel" class="assistant-panel">
+    <header class="assistant-header">
+        <div class="assistant-title">
+            <svg class="assistant-symbol" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z" /></svg>
+            <strong>AI Assistant</strong>
+        </div>
+        <button type="button" class="assistant-close" aria-label="AI 패널 닫기">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+    </header>
+    <div class="assistant-body">
+        <section class="assistant-section">
+            <h2>빠른 실행</h2>
+            <div class="assistant-action-list">
+                <button type="button" class="assistant-action" disabled="disabled"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5" /></svg><span>SOAP 자동생성</span></button>
+                <button type="button" class="assistant-action" disabled="disabled"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" /><path d="M9 12h6M9 16h4" /></svg><span>진단코드 추천</span></button>
+                <button type="button" class="assistant-action" disabled="disabled"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14M7 7l10 10M17 7 7 17" /><circle cx="12" cy="12" r="9" /></svg><span>처방 추천</span></button>
+                <button type="button" class="assistant-action" disabled="disabled"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18" /></svg><span>예약 예측</span></button>
+            </div>
+        </section>
+        <section class="assistant-section assistant-insight-section">
+            <h2>오늘의 인사이트</h2>
+            <article class="insight-card insight-chart">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 220 76" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="8,56 42,43 72,51 108,27 145,38 178,16 212,25" /></svg>
+                <span>예시 그래프 — 실데이터 연동 예정</span>
+            </article>
+            <article class="insight-card insight-tip">실데이터 연동 예정</article>
+        </section>
+    </div>
+    <footer class="assistant-footer">AI 결과는 참고용이며, 최종 판단은 의료진의 책임입니다.</footer>
+</aside>
+
 <footer th:fragment="footer" class="main-footer">
     <div class="float-right d-none d-sm-inline">Hospital Ops Lab</div>
     <strong>&copy; 2026 Hospital Ops Lab.</strong> All rights reserved.
