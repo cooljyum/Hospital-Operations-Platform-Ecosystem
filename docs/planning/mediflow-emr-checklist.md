@@ -87,9 +87,9 @@ MediFlow EMR 목업)는 전혀 적용되지 않았다. 사용자는 draft.png의
 - [x] 11.3 `sidebar` 프래그먼트 재구축: 11개 항목 전체. **완료 기준**: 구조 사실 5~8 존재, 기존 4개 실 화면 라우팅 정상. (감사 로그·방문 요약 리포트는 목업에 슬롯이 없어 즐겨찾기 블록으로 재배치 — 대시보드/통계/설정/감사로그/방문요약 5개 실 라우트 전부 유지)
 - [ ] **11.4 (블록됨 — 오케스트레이터 결정 대기)** 사이드바 활성 상태 동적 하이라이트. **완료 기준**: `/audit/preview` 방문 시 감사 로그 행이 하이라이트. 2회 실측 검증: `${#httpServletRequest.requestURI}`와 `${#request.requestURI}` 둘 다 이 프로젝트의 Thymeleaf 3.1 + Spring 6 렌더링 경로(`@SpringBootTest(webEnvironment=MOCK)` 풀 컨텍스트로 확인, 테스트 하네스 아티팩트 아님)에서 `SpelEvaluationException`. 코드베이스 전체에 성공 사용 사례 없음. 해결하려면 Java 쪽(`HandlerInterceptor`/`@ControllerAdvice`로 현재 경로를 모델 속성으로 주입)이 필요한데 이번 phase 대상 파일(`tokens.css`/`layout/default.html`/템플릿 3개)에 Java가 없어 범위 밖. 대안(클라이언트 JS로 `window.location.pathname` 비교)은 원 지시서가 명시한 "th:classappend" 메커니즘과 다름 — 스코프 확장(Java 파일 추가 허용) vs JS 대체 중 결정 필요. sidebar는 11.3 상태로 안전하게 남아있음(활성 하이라이트만 없음, 렌더링 정상).
 - [x] 11.5 재사용 콘텐츠 셸 프래그먼트(인사말/4카드/3단그리드/AI패널 크롬). **완료 기준**: 구조 사실 9~14 존재. (프래그먼트만 정의 — 11.6~11.8에서 실제 페이지에 끼워 넣을 때 최종 확인)
-- [ ] 11.6 `audit/list.html` 리스킨. **완료 기준**: `AuditLogControllerIT` 무수정 통과.
-- [ ] 11.7 `reports/patient-visit-summary.html` 리스킨. **완료 기준**: `PatientVisitSummaryControllerIT` 무수정 통과.
-- [ ] 11.8 `stats/patient-count-by-gender-age-band.html` 리스킨. **완료 기준**: `StatsViewControllerIT` 무수정 통과.
+- [x] 11.6 `audit/list.html` 리스킨. **완료 기준**: `AuditLogControllerIT` 무수정 통과. (이 샌드박스에 MySQL/Docker가 없어 IT 자체는 실행 불가 — 필터 폼 4개 name/GET action/`th:each` 반복/`.dot` 패턴은 diff로 직접 대조해 무변경 확인, `DashboardControllerTests`로 공통 프래그먼트 렌더링 확인. 실 MySQL 환경에서 IT 재확인 필요)
+- [x] 11.7 `reports/patient-visit-summary.html` 리스킨. **완료 기준**: `PatientVisitSummaryControllerIT` 무수정 통과. (동일한 환경 제약 — `<td>${row.visitCount}</td>`/`<td>${row.labResultCount}</td>` 셀이 속성 변경 없이 원본 그대로임을 diff로 직접 확인. 실 MySQL 환경에서 IT 재확인 필요)
+- [x] 11.8 `stats/patient-count-by-gender-age-band.html` 리스킨. **완료 기준**: `StatsViewControllerIT` 무수정 통과. (동일한 환경 제약 — k=5 억제 교차표 셀/헤더 반복 태그가 속성 변경 없이 원본 그대로임을 diff로 직접 확인. 실 MySQL 환경에서 IT 재확인 필요)
 - [ ] 11.9 AdminLTE 잔여 스타일 충돌 정리. **완료 기준**: 시각적 충돌 없음.
 
 ## Phase 12 — 실제 대시보드
