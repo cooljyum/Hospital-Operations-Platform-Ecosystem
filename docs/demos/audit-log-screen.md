@@ -112,7 +112,7 @@ Spring Security 폼 로그인 화면(`/login`). `auditor` 계정으로 로그인
 - [x] 필터 조합/초기화(초기화 버튼은 파라미터 없는 `/audit/preview`로 이동)
 - [x] break-glass grant 이벤트가 다른 감사 이벤트와 동일한 화면·필터로 조회됨(전용 뷰 불필요)
 - [x] 결과 건수가 헤더에 실시간으로 표시(`조회 결과 (N건)`)
-- [x] 성공/실패 여부를 색 채움 배지가 아닌 점(dot) + 텍스트로 표시(`docs/DESIGN.md` 배지 규칙 준수 — `list.html`의 `.dot-success`/`.dot-danger`)
+- [x] 성공/실패 여부를 색 채움 배지가 아닌 점(dot) + 텍스트로 표시(`md/design.md` 배지 규칙 준수 — `list.html`의 `.dot-success`/`.dot-danger`)
 
 ## 4. 확인되지 않은/시연 범위 밖
 

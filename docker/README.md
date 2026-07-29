@@ -51,7 +51,7 @@ docker compose up -d
 Docker Desktop(`29.6.1`)과 WSL2가 정상 동작하는 환경에서 `docker compose up -d`를 실제로 실행해
 5개 컨테이너(mysql/app/prometheus/grafana/nginx)가 전부 `healthy`/`running` 상태로 기동하는 것을
 확인했다. 이 검증 전에는 아래 표의 두 가지 blocking 버그 때문에 `app` 컨테이너가 재시작
-루프(`Restarting`)에 빠져 있었고(2026-07-21 재검토 세션에서 처음 진단, `docs/ai-reviewer-briefing.md`
+루프(`Restarting`)에 빠져 있었고(2026-07-21 재검토 세션에서 처음 진단, `md/ai-reviewer-briefing.md`
 §7.2 참고), 이번 세션에서 실제로 고쳤다.
 
 | # | 증상 | 원인 | 조치 |
@@ -70,7 +70,7 @@ Docker Desktop(`29.6.1`)과 WSL2가 정상 동작하는 환경에서 `docker com
 - `docker compose logs app`에 KEK/DB 관련 에러 없음(Flyway `Successfully validated 17 migrations`,
   `Schema is up to date`)
 - 검증 후 `docker compose down -v`로 컨테이너/볼륨 전량 정리, 로컬 native MySQL 재기동 및
-  `PATIENT` 12건 데이터 무결성 확인 완료(`docs/ai-reviewer-briefing.md` §7.2 참고)
+  `PATIENT` 12건 데이터 무결성 확인 완료(`md/ai-reviewer-briefing.md` §7.2 참고)
 
 **참고**: `allowPublicKeyRetrieval=true`는 운영 환경에서는 통상 권장되지 않는 옵션이지만, 이
 프로젝트는 실환자 데이터가 없는 로컬/폐쇄망 Docker Compose 시연 전제이므로 트레이드오프로

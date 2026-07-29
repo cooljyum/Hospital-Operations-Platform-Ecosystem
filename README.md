@@ -48,13 +48,12 @@ SQL 튜닝, 백업·복구 리허설, 감사 로그)이 핵심인 병원 전산�
 | `/app` | Spring Boot 3.x + Java 17 애플리케이션(Gradle) |
 | `/docker` | Docker Compose 기반 로컬 인프라(MySQL, app, Prometheus, Grafana, Nginx) — [`docker/README.md`](docker/README.md) |
 | `/docs/planning` | 기획 문서 — [`deliverable.md`](docs/planning/deliverable.md)(제안서), [`final_summary.md`](docs/planning/final_summary.md)(3자 합의), [`PLAN.md`](docs/planning/PLAN.md)(실행 계획, Phase 0~10 전체) |
-| `/docs/agents` | Gemini CLI 기반 적대적 검증 파이프라인 — [`gemini.md`](docs/agents/gemini.md) |
 | `/docs/incidents` | 장애 시나리오 재현·대응 로그북 (P0) |
 | `/docs/runbooks` | 배치 재처리·백업복구·키 회전 runbook (P0) |
 | `/docs/tuning` | 슬로우 쿼리 튜닝 전후 기록 (P0) |
 | `/docs/demos` | 감사 로그 화면·FHIR 변환 데모 (P0) |
 | `/docs/oracle-branch` | Oracle 19c 분기 설계 + 실기동 검증 (P2) |
-| `/docs/DESIGN.md` | UI 디자인 시스템(컬러·타이포·컴포넌트 규칙) |
+| `/md` | 작업 검증 파이프라인 + 디자인 시스템 — [`work.md`](md/work.md)(활성, Codex 위임 구현), [`design.md`](md/design.md)(UI 디자인 시스템), [`ai-reviewer-briefing.md`](md/ai-reviewer-briefing.md)(외부 AI 리뷰어용 브리핑 문서), [`gemini.md`](md/gemini.md)·[`codex.md`](md/codex.md)(과거 기록용, 비활성) |
 | `/scripts` | 합성 데이터 생성, 로컬 MySQL 기동 등 운영 스크립트 |
 
 ## 빠른 시작
@@ -104,7 +103,8 @@ P1(여유 산출물): 요약 테이블 리포팅 화면(`/reports/patient-visit-
 
 ## 검증 방식
 
-모든 비-사소 변경은 `CLAUDE.md`가 정의한 정책에 따라 Gemini CLI 기반 적대적 검증 루프
-([`docs/agents/gemini.md`](docs/agents/gemini.md))를 거쳐 `VERDICT: PASS`를 받은 뒤에만
-완료로 간주했다. 각 Step은 실제 환경(로컬 MySQL, Docker Compose, 실제 HTTP 호출)에서 재현한
-raw 증거(로그·쿼리 결과·EXPLAIN PLAN·스크린샷)를 근거로 문서화했다.
+모든 비-사소 변경은 `CLAUDE.md`가 정의한 정책에 따라 적대적 검증 루프(2026-07-24 이전은 Gemini
+CLI 기반 [`md/gemini.md`](md/gemini.md), 이후는 Codex CLI 위임 구현 기반 [`md/work.md`](md/work.md))를
+거쳐 `VERDICT: PASS`를 받은 뒤에만 완료로 간주했다. 각 Step은 실제 환경(로컬 MySQL, Docker
+Compose, 실제 HTTP 호출)에서 재현한 raw 증거(로그·쿼리 결과·EXPLAIN PLAN·스크린샷)를 근거로
+문서화했다.

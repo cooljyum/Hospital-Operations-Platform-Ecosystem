@@ -318,12 +318,12 @@ failures, 0 errors.** 이 수치는 `docs/demos/fhir-conversion.md` §8.3(Phase 
 | 문서 | 다루는 내용 |
 |---|---|
 | `README.md`(루트) | 프로젝트 개요, 기술 스택, 아키텍처, 빠른 시작, 채용 매핑 |
-| `CLAUDE.md`(루트) | 이 저장소에서 작업할 때 지켜야 하는 정책 — 단순 수치 변경 외 모든 작업은 Gemini CLI 검증 루프를 거쳐야 함, 디자인 작업은 `docs/DESIGN.md` 우선 확인, 운영 콘솔 레이아웃은 `docs/design/reference-layout-mediflow-emr.png` 기준 |
+| `CLAUDE.md`(루트) | 이 저장소에서 작업할 때 지켜야 하는 정책 — 단순 수치 변경 외 모든 작업은 Gemini CLI 검증 루프를 거쳐야 함, 디자인 작업은 `md/design.md` 우선 확인, 운영 콘솔 레이아웃은 `docs/design/reference-layout-mediflow-emr.png` 기준 |
 | `docs/planning/deliverable.md` | 최초 제안서 — 왜 이 포트폴리오인가, 기술 스택 선택 이유, 설계서 초안, P0/P1/P2 우선순위 정의 |
 | `docs/planning/final_summary.md` | (제안서에 대한) 3자(사용자+Claude+Gemini로 추정) 합의 기록 |
 | `docs/planning/PLAN.md` | 실행 계획 — Phase 0~10을 step 단위로 쪼갠 실행 순서와 각 step의 acceptance criteria(사전 계획 문서, 실제 파일 번호와는 다를 수 있음, §10-4 참고) |
-| `docs/agents/gemini.md` | Gemini CLI 기반 적대적 검증 파이프라인 — 호출 방식, 프롬프트 템플릿, 쿼터 소진 시 대체 경로(§0-2 Phase 배칭, §0-3 Claude subagent 대체 검증) |
-| `docs/DESIGN.md` | UI 디자인 시스템(컬러·타이포·컴포넌트 규칙, 배지/라벨 스타일 등) |
+| `md/gemini.md` | Gemini CLI 기반 적대적 검증 파이프라인 — 호출 방식, 프롬프트 템플릿, 쿼터 소진 시 대체 경로(§0-2 Phase 배칭, §0-3 Claude subagent 대체 검증) |
+| `md/design.md` | UI 디자인 시스템(컬러·타이포·컴포넌트 규칙, 배지/라벨 스타일 등) |
 | `docs/local-dev-mysql.md` | Docker 없이 로컬 native MySQL을 직접 설치·기동하는 경로 |
 | `docs/oracle-branch/` | Oracle 19c(실제로는 23ai Free) 분기 DDL·방언 차이·MV 실기동 검증 |
 | `docs/incidents/`, `docs/runbooks/`, `docs/tuning/`, `docs/demos/` | P0 운영 증빙 6종 원본(§9 표 참고) |
@@ -332,7 +332,7 @@ failures, 0 errors.** 이 수치는 `docs/demos/fhir-conversion.md` §8.3(Phase 
 
 ## 12. 검증 이력에 대한 투명성 — 왜 "이미 검증됐다"고 안이하게 넘기면 안 되는가
 
-이 프로젝트의 **모든 구현 Step은 이미 Gemini CLI 기반 적대적 검증(`docs/agents/gemini.md`)을
+이 프로젝트의 **모든 구현 Step은 이미 Gemini CLI 기반 적대적 검증(`md/gemini.md`)을
 거쳐 `VERDICT: PASS`를 받은 뒤 커밋됐다** — CLAUDE.md가 이를 강제하는 정책이고, 커밋 로그
 대부분이 "gemini 검증: ... VERDICT: PASS"를 커밋 메시지에 남기고 있다(예: `585115b`, `f02580e`
 등 다수 확인). 그러나 이 검증에는 아래와 같은 **구조적 한계**가 있고, 외부 AI 리뷰어는 이를

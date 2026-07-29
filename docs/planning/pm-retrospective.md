@@ -8,7 +8,7 @@
 > 모든 사실(완료일·커밋 해시·수치)은 다음 1차 자료에서 가져왔다 — 추측 없음:
 > - `git log --oneline --all` (전체 이력과 날짜 확인)
 > - `docs/planning/PLAN.md` (사전 계획 — step 정의·acceptance criteria 원문)
-> - `docs/ai-reviewer-briefing.md` (2026-07-21 재검토 세션의 실측 검증 결과)
+> - `docs/ai-reviewer-briefing.md` (2026-07-21 재검토 세션의 실측 검증 결과; 현재 경로: `md/ai-reviewer-briefing.md`)
 > - `docker/README.md`, 각 `docs/incidents|runbooks|tuning|demos|oracle-branch/*.md` (P0/P1/P2 산출물 원본)
 >
 > **커밋 수 기준점:** 이 문서가 최초 작성된 커밋 `8fb381a` 기준으로는 해당 커밋까지 도달 가능한
@@ -574,7 +574,8 @@ Phase(최대 4개)가 끝난 날도 있다 — 이는 각 step이 병렬 인간 
 - 목적: 사용자가 외부에서 얻은 개선된 파이프라인 패턴(codex 세션 resume 기반 정찰→구현→판정)을
   이 프로젝트에 도입
 - 구현 내용: `docs/agents/codex.md` 재작성(무관한 타 프로젝트 기록 제외, PowerShell 환경 적응),
-  `CLAUDE.md` 정책 갱신
+  `CLAUDE.md` 정책 갱신 (이후 `docs/agents/`·`docs/DESIGN.md`는 `md/`로 이동, 현재 활성
+  경로는 `md/work.md`)
 - 완료 기준: (계획 외 — 사용자 직접 요청)
 - 예상 난이도: 중
 - 선행 작업: 없음(문서·정책 작업)
@@ -638,14 +639,14 @@ Phase(최대 4개)가 끝난 날도 있다 — 이는 각 step이 병렬 인간 
 ## 8. 프로젝트 규칙
 
 이 프로젝트가 실제로 지켰던(그리고 앞으로도 지켜야 할) 규칙 — 사용자가 제시한 프레임워크의
-"프로젝트 규칙" 항목을 이 프로젝트의 실제 정책(`CLAUDE.md`, `docs/agents/codex.md`)과 결합해
+"프로젝트 규칙" 항목을 이 프로젝트의 실제 정책(`CLAUDE.md`, `md/work.md`)과 결합해
 재정리했다.
 
 - **절대 큰 작업을 한 번에 수행하지 않는다.** → 이 프로젝트는 35개 Task(Phase 0~10) + 4개
   사후 정비 Task로 쪼개 진행했다(§5).
 - **항상 가장 작은 작업 단위부터 수행한다.** → Task 하나 = 커밋 하나 원칙(대부분 지켜짐, 예외는
   §5에서 "보완"으로 표기된 fixup 커밋들).
-- **하나의 Task가 끝날 때마다 검증한다.** → `docs/agents/codex.md`(과거엔 `gemini.md`) 루프:
+- **하나의 Task가 끝날 때마다 검증한다.** → `md/work.md`(과거엔 `docs/agents/gemini.md`) 루프:
   정찰→지시→구현→Claude 판정→(FAIL 시)수정, PASS 전까지 완료로 보고하지 않는다. 고위험 step은
   여기에 별도 Codex 검증 세션의 `VERDICT: PASS`까지 요구한다.
 - **문제가 발생하면 원인을 분석한 뒤 수정 계획을 먼저 작성한다.** → Task 11.3(Docker 버그)이
@@ -668,6 +669,6 @@ Phase(최대 4개)가 끝난 날도 있다 — 이는 각 step이 병렬 인간 
 - **(추가) 정본 데이터 보호.** → 모든 파괴적 테스트(장애 재현, 백업복구 리허설, 벤치마크)는
   종료 시 원상복구를 완료 기준의 일부로 취급하고, row count 재대조로 실제 확인한다.
 - **(추가) subagent 위임 + 순차 투입 기본(조건부 병렬 허용).** → step 실행은 기본적으로 subagent에
-  위임한다. `docs/agents/codex.md` §4c는 파일 소유권 배타·공유 핫 파일 선점·인덱스 우회 커밋의
+  위임한다. `md/work.md` §4c는 파일 소유권 배타·공유 핫 파일 선점·인덱스 우회 커밋의
   3조건을 모두 충족하면 병렬도 허용하지만, 이 프로젝트는 그 조건을 활용할 필요가 없어 실제로 전
   Task를 순차로 진행했다.

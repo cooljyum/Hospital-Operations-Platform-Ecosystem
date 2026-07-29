@@ -171,7 +171,7 @@ resume로 추가 질문한다. **Claude가 소스 파일을 통째로 읽는 것
 1. <인터페이스/함수 시그니처/타입 — 이름까지 명시>
 2. <동작 — 입력별 기대 출력, 엣지케이스(빈 값/중복/에러) 처리 방식>
 3. <설계 결정사항 — 정찰 보고에서 갈렸던 선택지가 있으면 어느 쪽인지 Claude가 확정해서 명시>
-4. <이 프로젝트 컨벤션 — 보안 규칙, 네이밍, 아키텍처 패턴 등 CLAUDE.md/README/docs/DESIGN.md에 있는 것>
+4. <이 프로젝트 컨벤션 — 보안 규칙, 네이밍, 아키텍처 패턴 등 CLAUDE.md/README/md/design.md에 있는 것>
 5. <해서는 안 되는 것 — 예: 새 디렉토리 생성 금지, 기존 함수 시그니처 변경 금지 등>
 
 [완료 기준] <기계적으로 확인 가능한 조건 — Claude가 그대로 판정에 씀>
@@ -288,13 +288,13 @@ subagent는 반드시 diff를 직접 읽고 빌드/테스트를 자기 손으로
 
 ```
 [step 목표] <한 줄>
-[참고 문서] <관련 설계/스펙 문서 경로·절 — 이 프로젝트는 docs/planning/PLAN.md, docs/planning/deliverable.md, CLAUDE.md, docs/DESIGN.md 등>
+[참고 문서] <관련 설계/스펙 문서 경로·절 — 이 프로젝트는 docs/planning/PLAN.md, docs/planning/deliverable.md, CLAUDE.md, md/design.md 등>
 [대상 파일] <명시 — 이 밖의 파일은 접촉 금지>
 [완료 기준] <기계적으로 확인 가능한 조건들 — codex 지시서·판정 양쪽에 그대로 쓸 것>
 [고위험 여부] <예/아니오 — 예면 §3b 별도 codex 검증 세션 필수>
 
 [필수 규칙]
-1. 이 문서(docs/agents/codex.md)를 먼저 읽고 §2 호출·resume 형식(PowerShell, `< /dev/null` 쓰지
+1. 이 문서(md/work.md)를 먼저 읽고 §2 호출·resume 형식(PowerShell, `< /dev/null` 쓰지
    말 것)과 §3 루프(정찰→지시→구현→판정→수정)를 그대로 따르라.
 2. 실제 코드 작성·수정은 **전부 codex에게 시킨다.** 네가 직접 파일을 고치지 마라(FAIL 재시도도
    같은 codex 세션에 resume로 수정 지시 — 네가 손으로 고치는 게 아니다).
