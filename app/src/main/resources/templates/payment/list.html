@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='수납 관리')}">
+    <title>수납 관리</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='수납 관리', subtitle='환자 수납 현황을 조회하고 관리합니다.', actionLabel='신규 수납', actionHref=@{/payment/new})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>수납 목록 (<span th:text="${#lists.size(rows)}">0</span>건)</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>환자번호</th>
+                                    <th>환자명</th>
+                                    <th>수납일시</th>
+                                    <th>금액</th>
+                                    <th>결제수단</th>
+                                    <th>상태</th>
+                                    <th>처리자</th>
+                                    <th>수정</th>
+                                    <th>삭제</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(rows)}">
+                                    <td colspan="9" class="text-center text-muted">등록된 수납 정보가 없습니다.</td>
+                                </tr>
+                                <tr th:each="row : ${rows}">
+                                    <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
+                                    <td th:text="${row.patientName}">홍길동</td>
+                                    <td th:text="${row.payment.paidAt}">2026-01-01T09:00</td>
+                                    <td th:text="${row.payment.amount}">10000.00</td>
+                                    <td th:text="${row.payment.paymentMethod}">카드</td>
+                                    <td th:text="${row.payment.status}">PAID</td>
+                                    <td th:text="${row.payment.processedByUsername}">registrar</td>
+                                    <td><a class="btn btn-sm btn-default" th:href="@{/payment/{id}/edit(id=${row.payment.paymentId})}">수정</a></td>
+                                    <td>
+                                        <form method="post" th:action="@{/payment/{id}/delete(id=${row.payment.paymentId})}">
+                                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>

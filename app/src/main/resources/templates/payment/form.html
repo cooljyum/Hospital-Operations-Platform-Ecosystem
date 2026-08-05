@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '수납 수정' : '신규 수납'})}">
+    <title>수납</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '수납 수정' : '신규 수납'}, subtitle='환자번호는 화면용 식별자만 사용합니다.', actionLabel='목록으로', actionHref=@{/payment})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '수납 정보 수정' : '신규 수납 등록'">신규 수납 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/payment/{id}(id=${paymentId})} : @{/payment}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="paidAt">수납일시</label>
+                                    <input type="datetime-local" class="form-control" id="paidAt" name="paidAt"
+                                           th:value="${paidAt != null ? #temporals.format(paidAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="amount">금액</label>
+                                    <input type="number" class="form-control" id="amount" name="amount" step="0.01"
+                                           th:value="${amount}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="paymentMethod">결제수단</label>
+                                    <input type="text" class="form-control" id="paymentMethod" name="paymentMethod" maxlength="50"
+                                           th:value="${paymentMethod}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">상태</label>
+                                    <select class="form-control" id="status" name="status" required="required">
+                                        <option value="PAID" th:selected="${status == 'PAID'}">PAID</option>
+                                        <option value="REFUNDED" th:selected="${status == 'REFUNDED'}">REFUNDED</option>
+                                        <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '수납 등록'">수납 등록</button>
+                                <a th:href="@{/payment}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
