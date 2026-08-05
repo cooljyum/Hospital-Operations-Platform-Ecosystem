@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='간호 기록 관리')}">
+    <title>간호 기록 관리</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='간호 기록 관리', subtitle='환자의 활력징후 기록을 조회하고 관리합니다.', actionLabel='신규 기록', actionHref=@{/nursing/new})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>간호 기록 목록 (<span th:text="${#lists.size(rows)}">0</span>건)</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>환자번호</th>
+                                    <th>환자명</th>
+                                    <th>기록시각</th>
+                                    <th>체온</th>
+                                    <th>혈압</th>
+                                    <th>맥박</th>
+                                    <th>메모</th>
+                                    <th>간호사</th>
+                                    <th>수정</th>
+                                    <th>삭제</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(rows)}">
+                                    <td colspan="10" class="text-center text-muted">등록된 간호 기록이 없습니다.</td>
+                                </tr>
+                                <tr th:each="row : ${rows}">
+                                    <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
+                                    <td th:text="${row.patientName}">홍길동</td>
+                                    <td th:text="${row.nursingRecord.recordedAt}">2026-01-01T09:00</td>
+                                    <td th:text="${row.nursingRecord.temperature} ?: '-'">-</td>
+                                    <td th:text="${row.nursingRecord.bloodPressure} ?: '-'">-</td>
+                                    <td th:text="${row.nursingRecord.pulse} ?: '-'">-</td>
+                                    <td th:text="${row.nursingRecord.notes} ?: '-'">-</td>
+                                    <td th:text="${row.nursingRecord.nurseUsername}">nurse</td>
+                                    <td><a class="btn btn-sm btn-default" th:href="@{/nursing/{id}/edit(id=${row.nursingRecord.nursingRecordId})}">수정</a></td>
+                                    <td>
+                                        <form method="post" th:action="@{/nursing/{id}/delete(id=${row.nursingRecord.nursingRecordId})}">
+                                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
