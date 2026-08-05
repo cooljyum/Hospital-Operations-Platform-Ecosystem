@@ -1,0 +1,156 @@
+package com.hospitalops.appointment;
+
+import com.hospitalops.security.SecurityDataSeeder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@Transactional
+class AppointmentControllerIT {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
+	@Test
+	void migrationCreatesAppointmentTableAndBothAccessPolicyRules() {
+		Integer tableCount = jdbcTemplate.queryForObject("""
+				SELECT COUNT(*)
+				FROM information_schema.tables
+				WHERE table_schema = DATABASE() AND table_name = 'APPOINTMENT'
+				""", Integer.class);
+		assertThat(tableCount).isEqualTo(1);
+
+		var roles = jdbcTemplate.queryForList(
+				"SELECT role_name FROM ACCESS_POLICY_RULES WHERE url_pattern = '/appointment/**' ORDER BY role_name",
+				String.class);
+		assertThat(roles).containsExactly("ROLE_REGISTRAR", "ROLE_SYSTEM_ADMIN");
+	}
+
+	@ParameterizedTest(name = "{0} -> allowed={1}")
+	@CsvSource({
+			"admin, true",
+			"physician, false",
+			"nurse, false",
+			"registrar, true",
+			"auditor, false",
+	})
+	void onlyRegistrarAndSystemAdminCanAccessAppointmentScreen(String username, boolean allowed) throws Exception {
+		MockHttpSession session = loginAs(username);
+
+		mockMvc.perform(get("/appointment").session(session))
+				.andExpect(allowed ? status().isOk() : status().isForbidden());
+	}
+
+	@Test
+	void registrarCreatesAppointmentAndItAppearsInList() throws Exception {
+		String patientNo = existingSyntheticPatientNo();
+		String memo = "APPOINTMENT-CREATE-" + UUID.randomUUID();
+		MockHttpSession session = loginAs("registrar");
+
+		mockMvc.perform(post("/appointment").session(session).with(csrf())
+					.param("syntheticPatientNo", patientNo)
+					.param("scheduledAt", "2026-08-05T09:30")
+					.param("department", "내과")
+					.param("status", "SCHEDULED")
+					.param("memo", memo))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/appointment"));
+
+		MvcResult result = mockMvc.perform(get("/appointment").session(session))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertThat(result.getResponse().getContentAsString()).contains(patientNo).contains(memo).contains("registrar");
+	}
+
+	@Test
+	void registrarUpdatesAppointment() throws Exception {
+		MockHttpSession session = loginAs("registrar");
+		Long appointmentId = createAppointment(session, "APPOINTMENT-UPDATE-" + UUID.randomUUID());
+		String updatedMemo = "APPOINTMENT-UPDATED-" + UUID.randomUUID();
+		String patientNo = existingSyntheticPatientNo();
+
+		mockMvc.perform(get("/appointment/{id}/edit", appointmentId).session(session))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/appointment/{id}", appointmentId).session(session).with(csrf())
+					.param("syntheticPatientNo", patientNo)
+					.param("scheduledAt", "2026-08-05T10:45")
+					.param("department", "외과")
+					.param("status", "COMPLETED")
+					.param("memo", updatedMemo))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/appointment"));
+
+		MvcResult result = mockMvc.perform(get("/appointment").session(session))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertThat(result.getResponse().getContentAsString()).contains(updatedMemo).contains("COMPLETED");
+	}
+
+	@Test
+	void registrarDeletesAppointment() throws Exception {
+		MockHttpSession session = loginAs("registrar");
+		String memo = "APPOINTMENT-DELETE-" + UUID.randomUUID();
+		Long appointmentId = createAppointment(session, memo);
+
+		mockMvc.perform(post("/appointment/{id}/delete", appointmentId).session(session).with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/appointment"));
+
+		MvcResult result = mockMvc.perform(get("/appointment").session(session))
+				.andExpect(status().isOk())
+				.andReturn();
+		assertThat(result.getResponse().getContentAsString()).doesNotContain(memo);
+	}
+
+	private Long createAppointment(MockHttpSession session, String memo) throws Exception {
+		mockMvc.perform(post("/appointment").session(session).with(csrf())
+					.param("syntheticPatientNo", existingSyntheticPatientNo())
+					.param("scheduledAt", "2026-08-05T09:30")
+					.param("department", "내과")
+					.param("status", "SCHEDULED")
+					.param("memo", memo))
+				.andExpect(status().is3xxRedirection());
+		return jdbcTemplate.queryForObject(
+				"SELECT appointment_id FROM APPOINTMENT WHERE memo = ?", Long.class, memo);
+	}
+
+	private String existingSyntheticPatientNo() {
+		return jdbcTemplate.queryForObject(
+				"SELECT synthetic_patient_no FROM PATIENT ORDER BY patient_id LIMIT 1", String.class);
+	}
+
+	private MockHttpSession loginAs(String username) throws Exception {
+		MvcResult result = mockMvc.perform(post("/login")
+					.param("username", username)
+					.param("password", SecurityDataSeeder.LOCAL_TEST_PASSWORD)
+					.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andReturn();
+		MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+		assertThat(session).as("로그인 성공 시 세션이 발급되어야 함: " + username).isNotNull();
+		return session;
+	}
+}

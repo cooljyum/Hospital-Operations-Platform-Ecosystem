@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='예약 관리')}">
+    <title>예약 관리</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='예약 관리', subtitle='환자 예약 현황을 조회하고 관리합니다.', actionLabel='신규 예약', actionHref=@{/appointment/new})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>예약 목록 (<span th:text="${#lists.size(rows)}">0</span>건)</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>예약일시</th>
+                                    <th>환자번호</th>
+                                    <th>환자명</th>
+                                    <th>진료과</th>
+                                    <th>상태</th>
+                                    <th>메모</th>
+                                    <th>예약자</th>
+                                    <th>수정</th>
+                                    <th>삭제</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(rows)}">
+                                    <td colspan="9" class="text-center text-muted">등록된 예약 정보가 없습니다.</td>
+                                </tr>
+                                <tr th:each="row : ${rows}">
+                                    <td th:text="${row.appointment.scheduledAt}">2026-01-01T09:00</td>
+                                    <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
+                                    <td th:text="${row.patientName}">홍길동</td>
+                                    <td th:text="${row.appointment.department} ?: '-'">-</td>
+                                    <td th:text="${row.appointment.status}">SCHEDULED</td>
+                                    <td th:text="${row.appointment.memo} ?: '-'">-</td>
+                                    <td th:text="${row.appointment.bookedByUsername}">registrar</td>
+                                    <td><a class="btn btn-sm btn-default" th:href="@{/appointment/{id}/edit(id=${row.appointment.appointmentId})}">수정</a></td>
+                                    <td>
+                                        <form method="post" th:action="@{/appointment/{id}/delete(id=${row.appointment.appointmentId})}">
+                                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>

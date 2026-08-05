@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '예약 수정' : '신규 예약'})}">
+    <title>예약</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '예약 수정' : '신규 예약'}, subtitle='환자번호는 화면용 식별자만 사용합니다.', actionLabel='목록으로', actionHref=@{/appointment})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '예약 정보 수정' : '신규 예약 등록'">신규 예약 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/appointment/{id}(id=${appointmentId})} : @{/appointment}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="scheduledAt">예약일시</label>
+                                    <input type="datetime-local" class="form-control" id="scheduledAt" name="scheduledAt"
+                                           th:value="${scheduledAt != null ? #temporals.format(scheduledAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="department">진료과</label>
+                                    <input type="text" class="form-control" id="department" name="department" maxlength="100"
+                                           th:value="${department}" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">상태</label>
+                                    <select class="form-control" id="status" name="status" required="required">
+                                        <option value="SCHEDULED" th:selected="${status == 'SCHEDULED'}">SCHEDULED</option>
+                                        <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">CANCELLED</option>
+                                        <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">COMPLETED</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="memo">메모</label>
+                                    <textarea class="form-control" id="memo" name="memo" rows="4" maxlength="500"
+                                              th:text="${memo}"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '예약 등록'">예약 등록</button>
+                                <a th:href="@{/appointment}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
