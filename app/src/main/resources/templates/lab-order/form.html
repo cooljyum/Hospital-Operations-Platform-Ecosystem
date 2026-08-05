@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '검사 오더 수정' : '신규 검사 오더'})}">
+    <title>검사 오더</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '검사 오더 수정' : '신규 검사 오더'}, subtitle='환자번호는 화면용 식별자만 사용합니다.', actionLabel='목록으로', actionHref=@{/lab-order})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '검사 오더 정보 수정' : '신규 검사 오더 등록'">신규 검사 오더 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/lab-order/{id}(id=${labOrderId})} : @{/lab-order}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="orderedAt">오더일시</label>
+                                    <input type="datetime-local" class="form-control" id="orderedAt" name="orderedAt"
+                                           th:value="${orderedAt != null ? #temporals.format(orderedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="testName">검사명</label>
+                                    <input type="text" class="form-control" id="testName" name="testName" maxlength="200"
+                                           th:value="${testName}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">상태</label>
+                                    <select class="form-control" id="status" name="status" required="required">
+                                        <option value="ORDERED" th:selected="${status == 'ORDERED'}">ORDERED</option>
+                                        <option value="IN_PROGRESS" th:selected="${status == 'IN_PROGRESS'}">IN_PROGRESS</option>
+                                        <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">COMPLETED</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="resultSummary">결과요약</label>
+                                    <textarea class="form-control" id="resultSummary" name="resultSummary" rows="4" maxlength="500"
+                                              th:text="${resultSummary}"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '검사 오더 등록'">검사 오더 등록</button>
+                                <a th:href="@{/lab-order}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
