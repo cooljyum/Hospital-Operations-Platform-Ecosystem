@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title='진료실 관리')}">
+    <title>진료실 관리</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='진료실 관리', subtitle='진료실 세션 현황을 조회하고 관리합니다.', actionLabel='신규 진료', actionHref=@{/exam-room/new})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong>진료 목록 (<span th:text="${#lists.size(rows)}">0</span>건)</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>환자번호</th>
+                                    <th>환자명</th>
+                                    <th>진료실번호</th>
+                                    <th>담당의</th>
+                                    <th>시작시각</th>
+                                    <th>종료시각</th>
+                                    <th>메모</th>
+                                    <th>상태</th>
+                                    <th>수정</th>
+                                    <th>삭제</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(rows)}">
+                                    <td colspan="10" class="text-center text-muted">등록된 진료 정보가 없습니다.</td>
+                                </tr>
+                                <tr th:each="row : ${rows}">
+                                    <td th:text="${row.syntheticPatientNo}">SYN-0001</td>
+                                    <td th:text="${row.patientName}">홍길동</td>
+                                    <td th:text="${row.examRoomSession.roomNo}">101</td>
+                                    <td th:text="${row.examRoomSession.physicianUsername}">physician</td>
+                                    <td th:text="${row.examRoomSession.startedAt}">2026-01-01T09:00</td>
+                                    <td th:text="${row.examRoomSession.endedAt} ?: '-'">-</td>
+                                    <td th:text="${row.examRoomSession.notes} ?: '-'">-</td>
+                                    <td th:text="${row.examRoomSession.status}">WAITING</td>
+                                    <td><a class="btn btn-sm btn-default" th:href="@{/exam-room/{id}/edit(id=${row.examRoomSession.examRoomSessionId})}">수정</a></td>
+                                    <td>
+                                        <form method="post" th:action="@{/exam-room/{id}/delete(id=${row.examRoomSession.examRoomSessionId})}">
+                                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>

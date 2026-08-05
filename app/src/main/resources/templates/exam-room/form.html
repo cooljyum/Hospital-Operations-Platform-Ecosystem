@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '진료 수정' : '신규 진료'})}">
+    <title>진료실</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '진료 수정' : '신규 진료'}, subtitle='환자번호는 화면용 식별자만 사용하며 담당의는 로그인 계정으로 기록됩니다.', actionLabel='목록으로', actionHref=@{/exam-room})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '진료 정보 수정' : '신규 진료 등록'">신규 진료 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/exam-room/{id}(id=${examRoomSessionId})} : @{/exam-room}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="roomNo">진료실번호</label>
+                                    <input type="text" class="form-control" id="roomNo" name="roomNo" maxlength="20"
+                                           th:value="${roomNo}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="startedAt">시작시각</label>
+                                    <input type="datetime-local" class="form-control" id="startedAt" name="startedAt"
+                                           th:value="${startedAt != null ? #temporals.format(startedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="endedAt">종료시각</label>
+                                    <input type="datetime-local" class="form-control" id="endedAt" name="endedAt"
+                                           th:value="${endedAt != null ? #temporals.format(endedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">상태</label>
+                                    <select class="form-control" id="status" name="status" required="required">
+                                        <option value="WAITING" th:selected="${status == 'WAITING'}">WAITING</option>
+                                        <option value="IN_PROGRESS" th:selected="${status == 'IN_PROGRESS'}">IN_PROGRESS</option>
+                                        <option value="DONE" th:selected="${status == 'DONE'}">DONE</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notes">메모</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="4" maxlength="500"
+                                              th:text="${notes}"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '진료 등록'">진료 등록</button>
+                                <a th:href="@{/exam-room}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>

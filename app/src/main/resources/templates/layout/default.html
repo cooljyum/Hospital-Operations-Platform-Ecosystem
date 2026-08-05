@@ -92,7 +92,7 @@
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01" /></svg>
                     <span>예약</span>
                 </a>
-                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                <a th:href="@{/exam-room}" class="sidebar-item" th:classappend="${currentUri == '/exam-room'} ? 'is-active' : ''" sec:authorize="hasAnyAuthority('ROLE_PHYSICIAN','ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h11v18H4zM15 8h5v13h-5M8 12h3" /></svg>
                     <span>진료실</span>
                 </a>
