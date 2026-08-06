@@ -1,37 +1,85 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/default :: head(title='대시보드')}">
     <title>대시보드</title>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
-
-    <nav th:replace="~{layout/default :: topnavbar}"></nav>
-
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
     <aside th:replace="~{layout/default :: sidebar}"></aside>
 
-    <div class="content-wrapper">
-        <div class="content-header">
-            <div class="container-fluid">
-                <h1>대시보드</h1>
-            </div>
-        </div>
-        <section class="content">
-            <div class="container-fluid">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Phase 0 스캐폴딩 확인용 더미 페이지</h3>
-                    </div>
-                    <div class="card-body">
-                        <p>AdminLTE 정적 자산과 Thymeleaf 레이아웃 프래그먼트가 정상 통합되었는지 확인하는 더미 화면이다.</p>
-                        <p>실제 화면 구조·컬러·타이포그래피는 이후 단계에서 <code>DESIGN.md</code>와 레이아웃 레퍼런스에 맞춰 다시 설계한다.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title='대시보드', subtitle=${'오늘 ' + #temporals.format(#temporals.createNow(), 'yyyy-MM-dd (E)') + ' 기준 운영 현황입니다.'}, actionLabel='', actionHref='')}"></header>
 
-    <footer th:replace="~{layout/default :: footer}"></footer>
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='오늘 접수', value=${stats.todayReceptionCount + '건'}, description='오늘 접수 시각 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='calendar', label='오늘 예약', value=${stats.todayAppointmentCount + '건'}, description='오늘 예약 일정 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='입원중 인원', value=${stats.admittedPatientCount + '명'}, description='ADMITTED 상태 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='청구 대기', value=${stats.pendingClaimCount + '건'}, description='SUBMITTED 상태 기준')}"></article>
+                </section>
+
+                <section class="primary-grid primary-grid--thirds">
+                    <article class="panel">
+                        <div class="panel-header"><strong>모듈별 현황</strong></div>
+                        <div class="panel-scroll">
+                            <table class="table table-hover text-nowrap mb-0">
+                                <thead>
+                                <tr><th>모듈명</th><th class="text-right">건수</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="moduleCount : ${stats.moduleCounts}">
+                                    <td th:text="${moduleCount.label}">접수</td>
+                                    <td class="text-right" th:text="${moduleCount.count + '건'}">0건</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-header"><strong>빠른 이동</strong></div>
+                        <div class="panel-scroll">
+                            <div class="d-flex flex-column align-items-stretch" style="gap: 8px;">
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/reception}" sec:authorize="hasAnyAuthority('ROLE_REGISTRAR','ROLE_SYSTEM_ADMIN')">접수</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/appointment}" sec:authorize="hasAnyAuthority('ROLE_REGISTRAR','ROLE_SYSTEM_ADMIN')">예약</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/exam-room}" sec:authorize="hasAnyAuthority('ROLE_PHYSICIAN','ROLE_SYSTEM_ADMIN')">진료실</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/nursing}" sec:authorize="hasAnyAuthority('ROLE_NURSE','ROLE_SYSTEM_ADMIN')">간호</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/lab-order}" sec:authorize="hasAnyAuthority('ROLE_PHYSICIAN','ROLE_NURSE','ROLE_SYSTEM_ADMIN')">검사</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/payment}" sec:authorize="hasAnyAuthority('ROLE_REGISTRAR','ROLE_SYSTEM_ADMIN')">수납</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/admission}" sec:authorize="hasAnyAuthority('ROLE_NURSE','ROLE_PHYSICIAN','ROLE_SYSTEM_ADMIN')">입원</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/insurance-claim}" sec:authorize="hasAnyAuthority('ROLE_REGISTRAR','ROLE_SYSTEM_ADMIN')">보험청구</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/audit/preview}" sec:authorize="hasAuthority('ROLE_AUDITOR')">감사 로그</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/stats/patient-count-by-gender-age-band/view}" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">통계</a>
+                                <a class="secondary-button d-flex align-items-center" th:href="@{/reports/patient-visit-summary}" sec:authorize="hasAnyAuthority('ROLE_AUDITOR','ROLE_SYSTEM_ADMIN')">방문 요약 리포트</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-header"><strong>최근 24시간 활동</strong></div>
+                        <div class="panel-scroll">
+                            <p th:if="${#lists.isEmpty(stats.recentActivity)}" class="text-center text-muted mb-0">최근 24시간 내 활동이 없습니다</p>
+                            <table th:unless="${#lists.isEmpty(stats.recentActivity)}" class="table table-hover text-nowrap mb-0">
+                                <thead>
+                                <tr><th>모듈명</th><th class="text-right">건수</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="moduleCount : ${stats.recentActivity}">
+                                    <td th:text="${moduleCount.label}">접수</td>
+                                    <td class="text-right" th:text="${moduleCount.count + '건'}">0건</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
 </div>
 
 <th:block th:replace="~{layout/default :: scripts}"></th:block>

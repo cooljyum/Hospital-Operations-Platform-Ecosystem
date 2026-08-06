@@ -718,6 +718,10 @@ a {
     min-height: 0;
 }
 
+.primary-grid--thirds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .panel {
     min-width: 0;
     min-height: 0;

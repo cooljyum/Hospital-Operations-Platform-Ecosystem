@@ -52,13 +52,14 @@ class DashboardControllerTests {
 
 	@Test
 	@WithMockUser
-	void dashboardRendersAdminLteLayoutWhenAuthenticated() throws Exception {
+	void dashboardRendersEmrShellWithDashboardStatsWhenAuthenticated() throws Exception {
 		mockMvc.perform(get("/dashboard").accept(MediaType.TEXT_HTML))
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("adminlte.min.css")))
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("class=\"wrapper\"")))
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("Phase 0 스캐폴딩 확인용 더미 페이지")));
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("class=\"emr-shell\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("오늘 접수")))
+				.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Phase 0 스캐폴딩"))));
 	}
 
 }
