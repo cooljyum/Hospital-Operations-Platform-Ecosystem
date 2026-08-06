@@ -78,6 +78,7 @@ deliverable.md §3.4가 정의한 기준을 그대로 채택했다 — **P0(운�
 | 2026-07-24 | 검증 파이프라인을 Gemini CLI 기반에서 Codex CLI 위임 구현 모델로 전환. 본 PM 문서 작성 |
 | 2026-07-24 | pm-retrospective.md 자체를 Codex/Gemini 교차검증하며 3차례 수정 (7a5b202·8ddf0eb·dfc35d7) — 커밋 수 자기지시 문제, 검증이력 서술 오류 등 정정 |
 | 2026-07-30 | docs/ai-reviewer-briefing.md를 md/로 복원 이동, 저장소 전체 구 경로 참조 정리 (2735a2d) |
+| 2026-08-05~08-06 | 8개 CRUD 모듈(접수/예약/진료실/간호/검사/수납/입원/보험청구) 신규 구현 (18282a3~a4dcadf) |
 
 **해석 시 주의**: 표의 "일자"는 사람의 근무일이 아니라 AI 에이전트 세션 단위다. 하루에 여러
 Phase(최대 4개)가 끝난 날도 있다 — 이는 각 step이 병렬 인간 작업이 아니라 순차 AI subagent
@@ -603,6 +604,15 @@ Phase(최대 4개)가 끝난 날도 있다 — 이는 각 step이 병렬 인간 
 - 선행 작업: Task 11.4
 - 위험 요소: 역사적 서술과 현재 유효 경로를 구분하지 않고 일괄 치환하면 회고록의 사실관계 서술이 왜곡될 위험 — 문맥별로 구분해서 처리
 - 실제 결과: 완료, `2735a2d`(2026-07-30)
+
+**Task 11.7 — 8개 사이드바 메뉴 CRUD 기능 구현**
+- 목적: 사용자가 실제로 로그인해서 써볼 수 있는 화면이 대시보드/통계/감사로그/리포팅 4개뿐이라 나머지 8개 사이드바 메뉴가 전부 죽은 링크였던 것을 실제 기능으로 채움(사용자 명시적 요청)
+- 구현 내용: 접수/예약/진료실/간호/검사/수납/입원/보험청구 8개 모듈에 각각 신규 테이블(PATIENT에만 FK, VISIT/PATIENT에는 쓰기 안 함), Entity/Repository/Controller(서비스 계층 없음), list/form Thymeleaf 템플릿 2개, ACCESS_POLICY_RULES 역할별 등록(RBAC), 통합테스트(RBAC 5계정 + CRUD 왕복)를 구현. 마이그레이션은 `V18__reception.sql`~`V25__insurance_claim.sql`(V18~V25)로 추가. 역할 배정은 접수/예약/수납/보험청구=REGISTRAR+SYSTEM_ADMIN, 진료실=PHYSICIAN+SYSTEM_ADMIN, 간호=NURSE+SYSTEM_ADMIN, 검사=PHYSICIAN+NURSE+SYSTEM_ADMIN, 입원=NURSE+PHYSICIAN+SYSTEM_ADMIN. 기존 placeholder `href="#"` 및 ROLE_SYSTEM_ADMIN/ROLE_AUDITOR 임시 권한을 실제 기능과 역할 기반 권한으로 교체
+- 완료 기준: (계획 외 — 사용자 직접 요청)
+- 예상 난이도: 상(8개 모듈, 새 CRUD 패턴을 이 저장소에 처음 도입)
+- 선행 작업: 없음(기존 RBAC/Flyway/Thymeleaf 인프라 재사용)
+- 위험 요소: 이 저장소의 원래 범위(deliverable.md, PLAN.md)는 운영 증빙 중심으로 의도적으로 좁혀져 있었는데, 이번 작업으로 전체 EMR 워크플로에 가까운 기능이 추가되어 포트폴리오의 성격이 일부 확장됨(장단점 모두 있음 — 사용자가 인지하고 명시적으로 요청한 확장)
+- 실제 결과: 완료, 커밋 8개(`18282a3` 접수 → `b71f890` 예약 → `aa72766` 진료실 → `c03d788` 간호 → `59e228e` 검사 → `e2baf1b` 수납 → `a9e9459` 입원 → `a4dcadf` 보험청구), 208개 테스트 전부 통과, 실제 앱 재기동 후 Flyway 25개 마이그레이션 검증 및 8개 화면 전부 HTTP로 로그인 계정별 접근 가능/불가와 생성→목록 반영 CRUD 왕복 확인. 중간 Codex CLI 호출 1회는 네트워크(DNS) 오류로 실패했으나 재시도로 해결(코드 문제 아님)
 
 ---
 
