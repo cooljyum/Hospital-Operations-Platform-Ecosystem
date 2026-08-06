@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '입원 수정' : '신규 입원'})}">
+    <title>입원</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '입원 수정' : '신규 입원'}, subtitle='환자번호는 화면용 식별자만 사용합니다.', actionLabel='목록으로', actionHref=@{/admission})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '입원 정보 수정' : '신규 입원 등록'">신규 입원 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/admission/{id}(id=${admissionId})} : @{/admission}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="ward">병동</label>
+                                    <input type="text" class="form-control" id="ward" name="ward" maxlength="50"
+                                           th:value="${ward}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="bedNo">병상</label>
+                                    <input type="text" class="form-control" id="bedNo" name="bedNo" maxlength="20"
+                                           th:value="${bedNo}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="admittedAt">입원일시</label>
+                                    <input type="datetime-local" class="form-control" id="admittedAt" name="admittedAt"
+                                           th:value="${admittedAt != null ? #temporals.format(admittedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="dischargedAt">퇴원일시</label>
+                                    <input type="datetime-local" class="form-control" id="dischargedAt" name="dischargedAt"
+                                           th:value="${dischargedAt != null ? #temporals.format(dischargedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reason">사유</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="4" maxlength="500"
+                                              th:text="${reason}"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">상태</label>
+                                    <select class="form-control" id="status" name="status" required="required">
+                                        <option value="ADMITTED" th:selected="${status == 'ADMITTED'}">ADMITTED</option>
+                                        <option value="DISCHARGED" th:selected="${status == 'DISCHARGED'}">DISCHARGED</option>
+                                        <option value="TRANSFERRED" th:selected="${status == 'TRANSFERRED'}">TRANSFERRED</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '입원 등록'">입원 등록</button>
+                                <a th:href="@{/admission}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>

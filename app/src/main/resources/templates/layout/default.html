@@ -108,7 +108,7 @@
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h3" /></svg>
                     <span>수납</span>
                 </a>
-                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                <a th:href="@{/admission}" class="sidebar-item" th:classappend="${currentUri == '/admission'} ? 'is-active' : ''" sec:authorize="hasAnyAuthority('ROLE_NURSE','ROLE_PHYSICIAN','ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18V9h18v9M5 18v3M19 18v3M3 13h18M7 9V6h5v3" /><path d="M14 15h3" /></svg>
                     <span>입원</span>
                 </a>
