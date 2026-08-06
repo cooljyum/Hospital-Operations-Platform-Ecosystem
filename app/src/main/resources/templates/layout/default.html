@@ -112,7 +112,7 @@
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18V9h18v9M5 18v3M19 18v3M3 13h18M7 9V6h5v3" /><path d="M14 15h3" /></svg>
                     <span>입원</span>
                 </a>
-                <a href="#" class="sidebar-item" sec:authorize="hasAnyAuthority('ROLE_SYSTEM_ADMIN','ROLE_AUDITOR')">
+                <a th:href="@{/insurance-claim}" class="sidebar-item" th:classappend="${currentUri == '/insurance-claim'} ? 'is-active' : ''" sec:authorize="hasAnyAuthority('ROLE_REGISTRAR','ROLE_SYSTEM_ADMIN')">
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" /><path d="M9 12h6M9 16h4" /></svg>
                     <span>보험청구</span>
                 </a>

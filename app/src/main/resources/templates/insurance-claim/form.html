@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/default :: head(title=${isEdit ? '보험청구 수정' : '신규 보험청구'})}">
+    <title>보험청구</title>
+</head>
+<body>
+<div class="emr-shell">
+    <header th:replace="~{layout/default :: topnavbar}"></header>
+    <aside th:replace="~{layout/default :: sidebar}"></aside>
+
+    <main class="workspace">
+        <div class="workspace-layout">
+            <section class="dashboard-core">
+                <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '보험청구 수정' : '신규 보험청구'}, subtitle='합성 데모이며 실제 보험사 API와 연동하지 않습니다.', actionLabel='목록으로', actionHref=@{/insurance-claim})}"></header>
+
+                <section>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <strong th:text="${isEdit} ? '보험청구 정보 수정' : '신규 보험청구 등록'">신규 보험청구 등록</strong>
+                        </div>
+                        <div class="panel-scroll">
+                            <p th:if="${errorMessage}" class="text-danger" th:text="${errorMessage}">오류 메시지</p>
+                            <form method="post" th:action="${isEdit} ? @{/insurance-claim/{id}(id=${insuranceClaimId})} : @{/insurance-claim}">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <div class="form-group">
+                                    <label for="syntheticPatientNo">환자번호</label>
+                                    <input type="text" class="form-control" id="syntheticPatientNo" name="syntheticPatientNo"
+                                           th:value="${syntheticPatientNo}" th:readonly="${isEdit}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="insurerName">보험사명</label>
+                                    <input type="text" class="form-control" id="insurerName" name="insurerName" maxlength="100"
+                                           th:value="${insurerName}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="claimAmount">청구금액</label>
+                                    <input type="number" class="form-control" id="claimAmount" name="claimAmount" step="0.01"
+                                           th:value="${claimAmount}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="claimStatus">청구상태</label>
+                                    <select class="form-control" id="claimStatus" name="claimStatus" required="required">
+                                        <option value="SUBMITTED" th:selected="${claimStatus == 'SUBMITTED'}">SUBMITTED</option>
+                                        <option value="APPROVED" th:selected="${claimStatus == 'APPROVED'}">APPROVED</option>
+                                        <option value="REJECTED" th:selected="${claimStatus == 'REJECTED'}">REJECTED</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="submittedAt">제출일시</label>
+                                    <input type="datetime-local" class="form-control" id="submittedAt" name="submittedAt"
+                                           th:value="${submittedAt != null ? #temporals.format(submittedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" required="required" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="processedAt">처리일시</label>
+                                    <input type="datetime-local" class="form-control" id="processedAt" name="processedAt"
+                                           th:value="${processedAt != null ? #temporals.format(processedAt, 'yyyy-MM-dd''T''HH:mm') : ''}" />
+                                </div>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '수정 저장' : '청구 등록'">청구 등록</button>
+                                <a th:href="@{/insurance-claim}" class="btn btn-default ml-2">취소</a>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside th:replace="~{layout/default :: ai-panel}"></aside>
+        </div>
+    </main>
+</div>
+
+<th:block th:replace="~{layout/default :: scripts}"></th:block>
+</body>
+</html>
