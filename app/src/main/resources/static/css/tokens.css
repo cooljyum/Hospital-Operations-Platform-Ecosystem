@@ -548,6 +548,10 @@ a {
     row-gap: var(--section-gap);
 }
 
+.dashboard-core--compact {
+    grid-template-rows: var(--heading-height) minmax(0, 1fr);
+}
+
 /* =========================================================
    PAGE HEADING
 ========================================================= */

@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='입원 관리', subtitle='환자 입원 현황을 조회하고 관리합니다.', actionLabel='신규 입원', actionHref=@{/admission/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 입원', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='입원중', value=${#lists.size(rows.?[admission.status == 'ADMITTED']) + '건'}, description='입원 유지')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='퇴원', value=${#lists.size(rows.?[admission.status == 'DISCHARGED']) + '건'}, description='퇴원 완료')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='전원', value=${#lists.size(rows.?[admission.status == 'TRANSFERRED']) + '건'}, description='전원 처리')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

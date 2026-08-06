@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='접수 관리', subtitle='환자 접수 현황을 조회하고 관리합니다.', actionLabel='신규 접수', actionHref=@{/reception/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 접수', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='대기', value=${#lists.size(rows.?[reception.status == 'WAITING']) + '건'}, description='접수 대기')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='진행중', value=${#lists.size(rows.?[reception.status == 'IN_PROGRESS']) + '건'}, description='진료 진행')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='완료', value=${#lists.size(rows.?[reception.status == 'DONE']) + '건'}, description='접수 완료')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='간호 기록 관리', subtitle='환자의 활력징후 기록을 조회하고 관리합니다.', actionLabel='신규 기록', actionHref=@{/nursing/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 기록', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='체온 기록', value=${#lists.size(rows.?[nursingRecord.temperature != null]) + '건'}, description='체온 입력')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='혈압 기록', value=${#lists.size(rows.?[nursingRecord.bloodPressure != null]) + '건'}, description='혈압 입력')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='맥박 기록', value=${#lists.size(rows.?[nursingRecord.pulse != null]) + '건'}, description='맥박 입력')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

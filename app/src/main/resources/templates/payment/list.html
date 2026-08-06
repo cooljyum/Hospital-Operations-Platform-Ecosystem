@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='수납 관리', subtitle='환자 수납 현황을 조회하고 관리합니다.', actionLabel='신규 수납', actionHref=@{/payment/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 수납', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='완료', value=${#lists.size(rows.?[payment.status == 'PAID']) + '건'}, description='수납 완료')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='환불', value=${#lists.size(rows.?[payment.status == 'REFUNDED']) + '건'}, description='환불 처리')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='대기', value=${#lists.size(rows.?[payment.status == 'PENDING']) + '건'}, description='수납 대기')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

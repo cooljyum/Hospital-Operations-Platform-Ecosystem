@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='진료실 관리', subtitle='진료실 세션 현황을 조회하고 관리합니다.', actionLabel='신규 진료', actionHref=@{/exam-room/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 진료', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='대기', value=${#lists.size(rows.?[examRoomSession.status == 'WAITING']) + '건'}, description='진료 대기')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='진행중', value=${#lists.size(rows.?[examRoomSession.status == 'IN_PROGRESS']) + '건'}, description='진료 진행')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='완료', value=${#lists.size(rows.?[examRoomSession.status == 'DONE']) + '건'}, description='진료 완료')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

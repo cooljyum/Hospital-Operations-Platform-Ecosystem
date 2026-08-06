@@ -10,7 +10,7 @@
 
     <main class="workspace">
         <div class="workspace-layout">
-            <section class="dashboard-core">
+            <section class="dashboard-core dashboard-core--compact">
                 <header th:replace="~{layout/default :: page-heading(title=${isEdit ? '간호 기록 수정' : '신규 간호 기록'}, subtitle='환자번호는 화면용 식별자만 사용하며 간호사는 로그인 계정으로 기록됩니다.', actionLabel='목록으로', actionHref=@{/nursing})}"></header>
 
                 <section>

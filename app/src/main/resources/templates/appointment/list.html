@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='예약 관리', subtitle='환자 예약 현황을 조회하고 관리합니다.', actionLabel='신규 예약', actionHref=@{/appointment/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='calendar', label='전체 예약', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='users', label='예정', value=${#lists.size(rows.?[appointment.status == 'SCHEDULED']) + '건'}, description='예약 예정')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='취소', value=${#lists.size(rows.?[appointment.status == 'CANCELLED']) + '건'}, description='예약 취소')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='완료', value=${#lists.size(rows.?[appointment.status == 'COMPLETED']) + '건'}, description='진료 완료')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

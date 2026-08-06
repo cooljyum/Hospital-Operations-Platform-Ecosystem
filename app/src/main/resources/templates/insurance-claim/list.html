@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='보험청구 관리', subtitle='합성 데모 보험청구 현황을 조회하고 관리합니다.', actionLabel='신규 청구', actionHref=@{/insurance-claim/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 청구', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='calendar', label='제출', value=${#lists.size(rows.?[insuranceClaim.claimStatus == 'SUBMITTED']) + '건'}, description='청구 제출')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='승인', value=${#lists.size(rows.?[insuranceClaim.claimStatus == 'APPROVED']) + '건'}, description='청구 승인')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='거절', value=${#lists.size(rows.?[insuranceClaim.claimStatus == 'REJECTED']) + '건'}, description='청구 거절')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">

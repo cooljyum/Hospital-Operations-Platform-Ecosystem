@@ -13,6 +13,13 @@
             <section class="dashboard-core">
                 <header th:replace="~{layout/default :: page-heading(title='검사 오더 관리', subtitle='환자 검사 오더 현황을 조회하고 관리합니다.', actionLabel='신규 검사 오더', actionHref=@{/lab-order/new})}"></header>
 
+                <section class="summary-grid">
+                    <article th:replace="~{layout/default :: metric-card(iconKey='chart', label='전체 오더', value=${#lists.size(rows) + '건'}, description='현재 조회 기준')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='calendar', label='오더됨', value=${#lists.size(rows.?[labOrder.status == 'ORDERED']) + '건'}, description='검사 대기')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='alert', label='진행중', value=${#lists.size(rows.?[labOrder.status == 'IN_PROGRESS']) + '건'}, description='검사 진행')}"></article>
+                    <article th:replace="~{layout/default :: metric-card(iconKey='card', label='완료', value=${#lists.size(rows.?[labOrder.status == 'COMPLETED']) + '건'}, description='검사 완료')}"></article>
+                </section>
+
                 <section>
                     <div class="panel">
                         <div class="panel-header">
